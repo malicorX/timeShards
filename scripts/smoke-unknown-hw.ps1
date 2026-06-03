@@ -29,7 +29,8 @@ $apiJob = Start-Job -ScriptBlock {
     Remove-Item Env:TIMESHARDS_DISABLE_DEMO -ErrorAction SilentlyContinue
     Remove-Item Env:TIMESHARDS_BLOCK_DEFAULT_PASSWORDS -ErrorAction SilentlyContinue
     Remove-Item Env:TIMESHARDS_ADMIN_PASSWORD -ErrorAction SilentlyContinue
-    cargo run -q --bin timeshards-api 2>&1
+    $exe = Join-Path $Root "target\debug\timeshards-api.exe"
+    if (Test-Path $exe) { & $exe 2>&1 } else { cargo run -q --bin timeshards-api 2>&1 }
 } -ArgumentList $RepoRoot, $DbPath, "127.0.0.1", "47821"
 
 $healthUrl = "$ApiUrl/api/v1/health"

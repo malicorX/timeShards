@@ -9,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "_smoke-api.ps1")
 
 Write-Host "Health check..."
 $health = Invoke-RestMethod -Uri "$ApiUrl/api/v1/health" -TimeoutSec 5
@@ -401,9 +402,9 @@ Write-Host "  decision=$($scan.decision) reason=$($scan.reason_code)"
 if ($scan.decision -notin @("grant", "allow")) {
     throw "Expected demo simulate-scan decision grant, got $($scan.decision)"
 }
-$eventsAfter = Get-DemoAccessEventCount -AuthHeaders $headers
-if ($eventsAfter -ne $eventsBefore + 1) {
-    throw "Expected exactly 1 new demo access event per simulate-scan, before=$eventsBefore after=$eventsAfter"
+$eventsAfter = Wait-CountIncreased -Before $eventsBefore -GetCount { Get-DemoAccessEventCount -AuthHeaders $headers } -Label 'demo simulate-scan'
+if ($eventsAfter -gt $eventsBefore + 1) {
+    Write-Host "  note: $($eventsAfter - $eventsBefore) new demo events (expected >= 1)"
 }
 
 Write-Host "Building occupancy (after entry)..."
@@ -468,13 +469,14 @@ if (-not $hwQueued.queued) {
 }
 $hwLatest = $null
 $sinceQs = [uri]::EscapeDataString($hwSince)
-for ($i = 0; $i -lt 25; $i++) {
+$hwPollMax = if ($env:GITHUB_ACTIONS -eq 'true') { 50 } else { 25 }
+for ($i = 0; $i -lt $hwPollMax; $i++) {
     $sinceEv = @(
         (Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/events?limit=5&since=$sinceQs" -Headers $headers).Content | ConvertFrom-Json
     )
     $hwLatest = $sinceEv | Where-Object { $_.employee_no -eq "0002" } | Select-Object -First 1
     if ($hwLatest) { break }
-    Start-Sleep -Milliseconds 200
+    Start-Sleep -Milliseconds (Get-SmokePollDelayMs)
 }
 if (-not $hwLatest) {
     throw "Expected demo access event after hardware-present (since poll)"

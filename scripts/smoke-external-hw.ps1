@@ -44,7 +44,8 @@ $apiJob = Start-Job -ScriptBlock {
     Remove-Item Env:TIMESHARDS_DISABLE_DEMO -ErrorAction SilentlyContinue
     Remove-Item Env:TIMESHARDS_BLOCK_DEFAULT_PASSWORDS -ErrorAction SilentlyContinue
     Remove-Item Env:TIMESHARDS_ADMIN_PASSWORD -ErrorAction SilentlyContinue
-    cargo run -q --bin timeshards-api 2>&1
+    $exe = Join-Path $Root "target\debug\timeshards-api.exe"
+    if (Test-Path $exe) { & $exe 2>&1 } else { cargo run -q --bin timeshards-api 2>&1 }
 } -ArgumentList $RepoRoot, $DbPath, $env:TIMESHARDS_API_HOST, $env:TIMESHARDS_API_PORT, $env:TIMESHARDS_HW_ADAPTER, $env:TIMESHARDS_HW_TCP_ADDR
 
 $healthUrl = "$ApiUrl/api/v1/health"
@@ -112,11 +113,7 @@ try {
 } finally {
     $tcp.Close()
 }
-Start-Sleep -Milliseconds 500
-$tcpAfter = Get-AccessEventCount -AuthHeaders $headers
-if ($tcpAfter -le $tcpBefore) {
-    throw "Expected new access event after TCP ingest, before=$tcpBefore after=$tcpAfter"
-}
+$tcpAfter = Wait-CountIncreased -Before $tcpBefore -GetCount { Get-AccessEventCount -AuthHeaders $headers } -Label 'TCP JSON ingest'
 $tcpEvents = Get-AccessEvents -AuthHeaders $headers
 if ($tcpEvents[0].decision -notin @("grant", "allow")) {
     throw "Expected grant on TCP ingest path, got $($tcpEvents[0].decision)"
@@ -136,11 +133,7 @@ try {
 } finally {
     $tcp2.Close()
 }
-Start-Sleep -Milliseconds 500
-$tcpAfter2 = Get-AccessEventCount -AuthHeaders $headers
-if ($tcpAfter2 -le $tcpBefore2) {
-    throw "Expected new access event after compact TCP line, before=$tcpBefore2 after=$tcpAfter2"
-}
+$tcpAfter2 = Wait-CountIncreased -Before $tcpBefore2 -GetCount { Get-AccessEventCount -AuthHeaders $headers } -Label 'TCP compact ingest'
 Write-Host "  TCP compact line OK"
 
 $healthFinal = Invoke-RestMethod -Uri $healthUrl
@@ -167,9 +160,14 @@ try {
 } finally {
     $tcp3.Close()
 }
-Start-Sleep -Milliseconds 400
-$doorsAfter = @((Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/doors" -Headers $headers).Content | ConvertFrom-Json)
-$doorRow = $doorsAfter | Where-Object { $_.id -eq $doorId } | Select-Object -First 1
+$doorRow = $null
+$doorDeadline = (Get-Date).AddSeconds(15)
+while ((Get-Date) -lt $doorDeadline) {
+    Start-Sleep -Milliseconds (Get-SmokePollDelayMs)
+    $doorsAfter = @((Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/doors" -Headers $headers).Content | ConvertFrom-Json)
+    $doorRow = $doorsAfter | Where-Object { $_.id -eq $doorId } | Select-Object -First 1
+    if ($doorRow.status -eq 'alarm') { break }
+}
 if ($doorRow.status -ne "alarm") {
     throw "Expected door status alarm after TCP ingest, got $($doorRow.status)"
 }
@@ -187,10 +185,15 @@ try {
 } finally {
     $tcp4.Close()
 }
-Start-Sleep -Milliseconds 400
-$auditHw = @(
-    (Invoke-WebRequest -Uri "$ApiUrl/api/v1/admin/audit?actor_type=hardware&action=reader_offline&limit=10" -Headers $headers).Content | ConvertFrom-Json
-)
+$auditHw = @()
+$auditDeadline = (Get-Date).AddSeconds(15)
+while ((Get-Date) -lt $auditDeadline) {
+    Start-Sleep -Milliseconds (Get-SmokePollDelayMs)
+    $auditHw = @(
+        (Invoke-WebRequest -Uri "$ApiUrl/api/v1/admin/audit?actor_type=hardware&action=reader_offline&limit=10" -Headers $headers).Content | ConvertFrom-Json
+    )
+    if ($auditHw.Count -ge 1) { break }
+}
 if ($auditHw.Count -lt 1) {
     throw "Expected hardware reader_offline audit entry"
 }

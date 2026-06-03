@@ -7,6 +7,11 @@ function Stop-TimeshardsApiProcess {
 
 function Build-TimeshardsApi {
     param([string]$RepoRoot)
+    $exe = Join-Path $RepoRoot "target\debug\timeshards-api.exe"
+    if ($env:GITHUB_ACTIONS -eq 'true' -and (Test-Path $exe)) {
+        Write-Host "Using pre-built timeshards-api.exe"
+        return
+    }
     Push-Location $RepoRoot
     try {
         $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
@@ -18,11 +23,37 @@ function Build-TimeshardsApi {
     }
 }
 
+# In Start-Job scriptblocks after env setup:
+#   $exe = Join-Path $Root "target\debug\timeshards-api.exe"
+#   if (Test-Path $exe) { & $exe 2>&1 } else { cargo run -q --bin timeshards-api 2>&1 }
+
 function Get-SmokeHealthTimeoutSec {
     param([int]$DefaultSec = 90)
     # Headless smoke runs `cargo run` cold; allow time for compile + seed on CI and dev machines.
     if ($env:GITHUB_ACTIONS -eq 'true') { return [Math]::Max($DefaultSec, 240) }
     return [Math]::Max($DefaultSec, 150)
+}
+
+function Get-SmokePollDelayMs {
+    if ($env:GITHUB_ACTIONS -eq 'true') { return 400 }
+    return 200
+}
+
+function Wait-CountIncreased {
+    param(
+        [int]$Before,
+        [scriptblock]$GetCount,
+        [string]$Label,
+        [int]$TimeoutSec = 15
+    )
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    $after = $Before
+    while ((Get-Date) -lt $deadline) {
+        $after = & $GetCount
+        if ($after -gt $Before) { return $after }
+        Start-Sleep -Milliseconds (Get-SmokePollDelayMs)
+    }
+    throw "Expected count to increase ($Label): before=$Before after=$after"
 }
 
 function Wait-TimeshardsApiHealth {
