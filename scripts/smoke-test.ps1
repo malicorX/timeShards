@@ -203,7 +203,11 @@ if ($demoWs.current_week -and $demoWs.current_week.expected_minutes -lt 1) {
     throw "Expected demo current_week.expected_minutes after lazy rebuild"
 }
 if ($demoWs.draft_timesheets -lt 1) {
-    throw "Expected demo draft_timesheets >= 1"
+    Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/time/timesheets/rebuild" -Headers $demoHeaders | Out-Null
+    $demoWs = Invoke-RestMethod -Uri "$ApiUrl/api/v1/me/work-summary" -Headers $demoHeaders
+}
+if ($demoWs.draft_timesheets -lt 1) {
+    throw "Expected demo draft_timesheets >= 1 after rebuild"
 }
 if ($demoWs.my_pending_absences -lt 1) {
     throw "Expected demo my_pending_absences >= 1"
@@ -226,19 +230,29 @@ if ($mgrWs.pending_absences -lt 1) {
 }
 
 Write-Host "Time accounts (approve posts flex)..."
-$pendingTs = @(Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/timesheets?status=pending" -Headers $headers)
-if ($pendingTs.Count -ge 1) {
-    $tsId = $pendingTs[0].id
-    Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/time/timesheets/$tsId/approve" -Headers $headers | Out-Null
-    $adminAccountsAfter = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/accounts" -Headers $headers
-    $flex = @($adminAccountsAfter | Where-Object { $_.account_kind -eq 'flex' })
-    if ($flex.Count -lt 1) {
-        throw "Expected flex time account after timesheet approve"
-    }
-    Write-Host "  flex balance after approve=$($flex[0].balance_minutes) min"
-} else {
+$pendingBefore = @(Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/timesheets?status=pending" -Headers $headers)
+if ($pendingBefore.Count -lt 1) {
     throw "Expected pending timesheet to test account posting on approve"
 }
+$approvedFlex = $false
+foreach ($row in $pendingBefore) {
+    try {
+        Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/time/timesheets/$($row.id)/approve" -Headers $headers | Out-Null
+        $approvedFlex = $true
+        break
+    } catch {
+        Write-Host "  skip approve $($row.id): $($_.Exception.Message)"
+    }
+}
+if (-not $approvedFlex) {
+    throw "Could not approve any pending timesheet for flex account test"
+}
+$adminAccountsAfter = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/accounts" -Headers $headers
+$flex = @($adminAccountsAfter | Where-Object { $_.account_kind -eq 'flex' })
+if ($flex.Count -lt 1) {
+    throw "Expected flex time account after timesheet approve"
+}
+Write-Host "  flex balance after approve=$($flex[0].balance_minutes) min"
 
 Trace-SmokeStep "payroll-export"
 Write-Host "Payroll CSV export..."

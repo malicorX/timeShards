@@ -10,8 +10,8 @@ Phase 2 items are **tracks**, not a fixed quarter plan. Priority is set in [ROAD
 
 | Track | Roadmap | Goal | Today |
 |-------|---------|------|--------|
-| **UI/UX** | M2 | Shared tokens, informative + clickable UI | [UI_UX_GUIDE.md](./UI_UX_GUIDE.md); Perioden UI partial |
-| **Perioden** | M3 | Feiertag, Umschaltplan editor, full-year UX | KW + Jahr befüllen; POST calendars/models |
+| **UI/UX** | M2 | Shared tokens, informative + clickable UI | Shipped — [UI_UX_GUIDE.md](./UI_UX_GUIDE.md) |
+| **Perioden** | M3 | Feiertag, Umschaltplan editor, full-year UX | Shipped — tabs, Jahresübersicht, rename calendar |
 | **Hardware** | M4 | Production reader via external bridge | `sim` + `external`; [HARDWARE.md](./HARDWARE.md) |
 | **DATEV / Lohn** | M5 | Bureau-validated export | Lohn- + Abwesenheiten-CSV; [DATEV.md](./DATEV.md) draft |
 | **First-run setup** | M3+ | Empty-DB onboarding beyond seed | Admin password + Go-Live wizard |
@@ -34,8 +34,7 @@ Phase 2 items are **tracks**, not a fixed quarter plan. Priority is set in [ROAD
 ## Verify before each release
 
 ```powershell
-npm run verify:all
-npm run smoke:production
+npm run verify:pilot
 ```
 
 ---

@@ -48,9 +48,12 @@ No DATEV import in v1 — hand CSVs to Lohnbüro / Excel.
 ## 6. Verify before go-live
 
 ```powershell
-npm run verify:all
-npm run smoke:production
+npm run verify:pilot
 ```
+
+Runs `check:all`, DB tests, full API smoke (incl. door mapping), and production-mode smoke (`TIMESHARDS_DISABLE_DEMO`, blocked default passwords).
+
+With API running for a hardware pilot: `npm run verify:doors`
 
 ## After pilot
 

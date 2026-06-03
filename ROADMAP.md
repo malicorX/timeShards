@@ -57,7 +57,7 @@ Treat as done unless a row is marked **partial**:
 | CI smoke stability (GHA PowerShell) | ✅ | `Invoke-RestMethod` pattern |
 | [PILOT.md](./docs/PILOT.md) cutover checklist | ✅ | |
 
-**Exit:** `npm run verify:all` + `smoke:production` green; pilot doc walkthrough once on clean DB.
+**Exit:** `npm run verify:pilot` green; pilot doc walkthrough once on clean DB.
 
 ---
 
@@ -170,8 +170,8 @@ gantt
 
 ```powershell
 npm run check:all
-npm run verify:foundation
-npm run smoke:production   # before release / pilot
+npm run verify:pilot       # before release / pilot (all + production smoke)
+npm run verify:doors       # optional, API must run (hardware bridge)
 ```
 
 - German UI strings for user-visible text.

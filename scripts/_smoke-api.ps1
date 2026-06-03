@@ -53,6 +53,51 @@ function Get-SmokePollDelayMs {
     return 200
 }
 
+function Test-LocalPortListening {
+    param(
+        [string]$HostName = '127.0.0.1',
+        [int]$Port
+    )
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $iar = $client.BeginConnect($HostName, $Port, $null, $null)
+        if ($iar.AsyncWaitHandle.WaitOne(500) -and $client.Connected) {
+            return $true
+        }
+    } catch { }
+    finally {
+        if ($client.Connected) { $client.Close() }
+        $client.Dispose()
+    }
+    return $false
+}
+
+function Resolve-SmokeApiPort {
+    param(
+        [int]$PreferredPort = 47821,
+        [string]$HostName = '127.0.0.1'
+    )
+    if (-not (Test-LocalPortListening -HostName $HostName -Port $PreferredPort)) {
+        return $PreferredPort
+    }
+    for ($try = 0; $try -lt 40; $try++) {
+        $candidate = 47840 + (Get-Random -Maximum 200)
+        if (-not (Test-LocalPortListening -HostName $HostName -Port $candidate)) {
+            Write-Host "Port $PreferredPort in use; smoke API will use $candidate"
+            return $candidate
+        }
+    }
+    throw "Could not find a free port for smoke API (preferred $PreferredPort, range 47840-47999)"
+}
+
+function Resolve-SmokeApiUrl {
+    param([string]$ApiUrl = 'http://127.0.0.1:47821')
+    $uri = [Uri]$ApiUrl
+    $port = Resolve-SmokeApiPort -PreferredPort $uri.Port -HostName $uri.Host
+    if ($port -eq $uri.Port) { return $ApiUrl }
+    return "$($uri.Scheme)://$($uri.Host):$port"
+}
+
 function Wait-TcpPortOpen {
     param(
         [string]$HostName = '127.0.0.1',
