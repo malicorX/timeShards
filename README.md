@@ -2,6 +2,8 @@
 
 Modular desktop system for **time tracking** and **access control** (Germany-first, worldwide-ready).
 
+**Current status:** [STATUS.md](STATUS.md) · **v0.2.0** ([release notes](docs/releases/v0.2.0.md))
+
 - **TimeShards Server** — Windows desktop app: configuration, API, database, audit.
 - **TimeShards Client** — Windows desktop app: connects to the server for daily work (clock-in/out, access events).
 
@@ -75,6 +77,7 @@ npm run smoke:hw-unknown   # invalid TIMESHARDS_HW_ADAPTER → sim fallback
 # or: .\scripts\run-api.ps1   # then .\scripts\smoke-test.ps1
 npm run check:all              # cargo check + svelte-check
 npm run verify:foundation      # timeshards-db tests + smoke:api (work calendar / Soll)
+npm run verify:all             # check:all + verify:foundation (pre-push)
 ```
 
 Environment template: [.env.example](.env.example). Hardware bridge: [docs/HARDWARE.md](docs/HARDWARE.md).

@@ -1,5 +1,9 @@
 # TimeShards: Architectural Roadmap
 
+> **Runnable product today:** Germany-first time + access desktop apps with work-calendar Soll/Ist foundation.
+> See [STATUS.md](./STATUS.md), [docs/FOUNDATION.md](./docs/FOUNDATION.md), and [docs/PRODUCTION.md](./docs/PRODUCTION.md).
+> The phases below describe the longer-term **micro-kernel** vision, not the current shipping scope.
+
 ## 1. Vision
 TimeShards is a time-tracking ecosystem designed for **extreme modularity**. The goal is to provide a tool that is simple for the end-user but infinitely extensible for the developer/customer. Functionality should be treatable as "shards"—pluggable components that can be added or removed without impacting the core system.
 

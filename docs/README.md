@@ -11,6 +11,7 @@
 | [releases/v0.2.0.md](./releases/v0.2.0.md) | Release notes for tag `v0.2.0` (GitHub Release body) |
 | [openapi.json](./openapi.json) | OpenAPI 3.0 subset (`GET /api/v1/openapi.json` when server runs) |
 | [HARDWARE.md](./HARDWARE.md) | Simulator vs real readers, adapter rules |
+| [../STATUS.md](../STATUS.md) | What ships today (v1 foundation summary) |
 | [../README.md](../README.md) | Project overview |
 | [../ROADMAP.md](../ROADMAP.md) | Product direction (high level) |
 | [../ROADMAP_DETAILS.md](../ROADMAP_DETAILS.md) | Detailed vision and modules |

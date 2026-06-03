@@ -33,6 +33,14 @@ while ((Get-Date) -lt $deadline) {
         $r = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 3
         if ($r.status -eq "ok") {
             $ready = $true
+            Write-Host "  $($r.service) v$($r.version) — DB $($r.database)"
+            if ($r.time_foundation) {
+                $tf = $r.time_foundation
+                Write-Host "  Zeitbasis: $($tf.workday_models) Modelle, $($tf.work_calendars) Kalender, $($tf.active_employees) MA aktiv"
+                if ($tf.employees_without_work_calendar -gt 0 -or $tf.current_week_drafts_without_soll -gt 0) {
+                    Write-Host "  Hinweis: ohne Kalender=$($tf.employees_without_work_calendar), KW ohne Soll=$($tf.current_week_drafts_without_soll) — Übersicht → Zeitbasis reparieren" -ForegroundColor Yellow
+                }
+            }
             break
         }
     } catch {
