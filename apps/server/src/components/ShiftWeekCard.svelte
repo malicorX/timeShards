@@ -383,10 +383,10 @@
         <option value={e.id}>{e.employee_no} — {e.display_name}</option>
       {/each}
     </select>
-    <label class="muted">Beginn</label>
-    <input type="datetime-local" bind:value={newShift.starts_local} />
-    <label class="muted">Ende</label>
-    <input type="datetime-local" bind:value={newShift.ends_local} />
+    <label class="muted" for="new-shift-start">Beginn</label>
+    <input id="new-shift-start" type="datetime-local" bind:value={newShift.starts_local} />
+    <label class="muted" for="new-shift-end">Ende</label>
+    <input id="new-shift-end" type="datetime-local" bind:value={newShift.ends_local} />
     <button type="button" onclick={createShift} disabled={!!shiftConflict}>Schicht speichern</button>
     {#if shiftConflict}<p class="error">{shiftConflict}</p>{/if}
   </div>

@@ -510,10 +510,10 @@
       <input bind:value={newAccessRule.start} placeholder="08:00" />
       <input bind:value={newAccessRule.end} placeholder="18:00" />
     {/if}
-    <label class="muted">Gültig ab (optional, sonst jetzt)</label>
-    <input type="datetime-local" bind:value={newAccessRule.valid_from_local} />
-    <label class="muted">Gültig bis (optional)</label>
-    <input type="datetime-local" bind:value={newAccessRule.valid_to_local} />
+    <label class="muted" for="new-access-rule-from">Gültig ab (optional, sonst jetzt)</label>
+    <input id="new-access-rule-from" type="datetime-local" bind:value={newAccessRule.valid_from_local} />
+    <label class="muted" for="new-access-rule-to">Gültig bis (optional)</label>
+    <input id="new-access-rule-to" type="datetime-local" bind:value={newAccessRule.valid_to_local} />
     <button type="button" onclick={createAccessRule}>Regel (Allow) anlegen</button>
   </div>
   <div class="btn-row" style="margin-top: 0.5rem;">
@@ -544,14 +544,16 @@
           {/if}
         </span>
         <div class="grid-form" style="margin-top: 0.35rem;">
-          <label class="muted">Gültig ab</label>
+          <label class="muted" for="access-rule-from-{r.id}">Gültig ab</label>
           <input
+            id="access-rule-from-{r.id}"
             type="datetime-local"
             value={isoToLocalDatetimeInput(r.valid_from)}
             onchange={(ev) => updateAccessRuleValidFrom(r.id, ev.currentTarget.value)}
           />
-          <label class="muted">Gültig bis</label>
+          <label class="muted" for="access-rule-to-{r.id}">Gültig bis</label>
           <input
+            id="access-rule-to-{r.id}"
             type="datetime-local"
             value={isoToLocalDatetimeInput(r.valid_to)}
             onchange={(ev) => updateAccessRuleValidTo(r.id, ev.currentTarget.value)}
@@ -610,10 +612,10 @@
 <div class="card" style="margin-top: 1rem;">
   <h3>Simulator</h3>
   <div class="grid-form" style="margin-bottom: 0.5rem;">
-    <label class="muted">Export von</label>
-    <input type="datetime-local" bind:value={accessExportFrom} />
-    <label class="muted">Export bis</label>
-    <input type="datetime-local" bind:value={accessExportTo} />
+    <label class="muted" for="access-export-from">Export von</label>
+    <input id="access-export-from" type="datetime-local" bind:value={accessExportFrom} />
+    <label class="muted" for="access-export-to">Export bis</label>
+    <input id="access-export-to" type="datetime-local" bind:value={accessExportTo} />
   </div>
   <div class="btn-row" style="margin-bottom: 0.5rem;">
     <button class="secondary" type="button" onclick={() => exportAccessLog('csv')}>Zutritt CSV</button>

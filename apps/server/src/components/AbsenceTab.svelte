@@ -182,10 +182,10 @@
       <option value="sonder">Sonderurlaub</option>
       <option value="unbezahlt">Unbezahlt</option>
     </select>
-    <label class="muted">Von</label>
-    <input type="datetime-local" bind:value={newAbsence.starts_local} />
-    <label class="muted">Bis</label>
-    <input type="datetime-local" bind:value={newAbsence.ends_local} />
+    <label class="muted" for="new-absence-start">Von</label>
+    <input id="new-absence-start" type="datetime-local" bind:value={newAbsence.starts_local} />
+    <label class="muted" for="new-absence-end">Bis</label>
+    <input id="new-absence-end" type="datetime-local" bind:value={newAbsence.ends_local} />
     <input bind:value={newAbsence.reason} placeholder="Begründung (optional)" />
     <button type="button" onclick={createAbsence} disabled={!!absenceConflict}>Antrag stellen</button>
     {#if absenceConflict}<p class="error">{absenceConflict}</p>{/if}
