@@ -1,6 +1,6 @@
 # Project status (time foundation v1)
 
-**Last updated:** 2026-06-02 · **Release:** [`v0.2.0`](docs/releases/v0.2.0.md)
+**Last updated:** 2026-06-02 · **Release:** [`v0.2.0`](docs/releases/v0.2.0.md) (app/API version **0.2.0**)
 
 ## Shipped
 

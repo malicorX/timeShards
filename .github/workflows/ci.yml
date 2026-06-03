@@ -18,8 +18,6 @@ jobs:
         run: cargo check --workspace
       - name: hardware unit tests
         run: cargo test -p timeshards-hardware
-      - name: timeshards-db tests
-        run: cargo test -p timeshards-db
 
   frontend:
     runs-on: windows-latest
@@ -33,7 +31,7 @@ jobs:
       - run: npm run check -w @timeshards/server
       - run: npm run check -w @timeshards/client
 
-  smoke:
+  verify-foundation:
     runs-on: windows-latest
     needs: [rust]
     steps:
@@ -44,8 +42,8 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
-      - name: API smoke test
-        run: npm run smoke:api
+      - name: DB tests + API smoke (work calendar / Soll)
+        run: npm run verify:foundation
 
   smoke-production:
     runs-on: windows-latest

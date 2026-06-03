@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "AI TimeShards API",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "REST API for time tracking and access control. Narrative reference: docs/API.md. Machine-readable spec served at GET /api/v1/openapi.json."
   },
   "servers": [{ "url": "http://127.0.0.1:47821", "description": "Default local bind" }],

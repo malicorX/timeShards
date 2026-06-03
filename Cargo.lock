@@ -4377,7 +4377,7 @@ dependencies = [
 
 [[package]]
 name = "timeshards-api"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "argon2",
@@ -4405,7 +4405,7 @@ dependencies = [
 
 [[package]]
 name = "timeshards-client"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -4416,7 +4416,7 @@ dependencies = [
 
 [[package]]
 name = "timeshards-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "axum",
  "chrono",
@@ -4428,7 +4428,7 @@ dependencies = [
 
 [[package]]
 name = "timeshards-db"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "argon2",
@@ -4450,7 +4450,7 @@ dependencies = [
 
 [[package]]
 name = "timeshards-hardware"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4466,7 +4466,7 @@ dependencies = [
 
 [[package]]
 name = "timeshards-kernel"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4480,7 +4480,7 @@ dependencies = [
 
 [[package]]
 name = "timeshards-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "serde",

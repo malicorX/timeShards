@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented here.
 
+## [0.2.1] — 2026-06-02
+
+### Added
+
+- [STATUS.md](STATUS.md) — v1 product scope vs long-term ROADMAP.
+- `npm run verify:all` — `check:all` + `verify:foundation` in one command.
+
+### Changed
+
+- Crate and app versions aligned to **0.2.0** (API health, Tauri bundles).
+- CI: `verify-foundation` job runs DB tests + API smoke (no duplicate DB test job on rust).
+- `start_all.ps1` prints Zeitbasis KPIs when the API comes up.
+
+### Fixed
+
+- Server and client form label associations (svelte-check a11y clean).
+
 ## [0.2.0] — 2026-06-02
 
 ### Added
