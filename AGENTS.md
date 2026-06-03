@@ -23,6 +23,8 @@ npm run verify:pilot            # verify:all + smoke:production (go-live gate)
 npm run pilot:ready             # verify:pilot + printed PILOT.md checklist
 Headless smokes pick a free port when **47821** is already in use (e.g. Tauri server running).
 npm run verify:doors            # door/reader table for HW bridge (API must run)
+npm run api:hw-pilot            # pilot API + external HW TCP (needs TIMESHARDS_ADMIN_PASSWORD)
+npm run hw:pilot                # door map + TCP scan test (with api:hw-pilot running)
 npm run foundation:health       # GET /health time_foundation (API must run)
 ```
 
