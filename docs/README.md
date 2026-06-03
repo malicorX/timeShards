@@ -8,6 +8,7 @@
 | [FOUNDATION.md](./FOUNDATION.md) | What is implemented vs planned for the time base |
 | [FOUNDATION_CHECKLIST.md](./FOUNDATION_CHECKLIST.md) | Admin go-live checklist (Kalender, Soll, repair) |
 | [PRODUCTION.md](./PRODUCTION.md) | Production deploy (env vars, Go-Live, verify) |
+| [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md) | Lohn-CSV columns and parameters |
 | [releases/v0.2.0.md](./releases/v0.2.0.md) | Release notes for tag `v0.2.0` (GitHub Release body) |
 | [openapi.json](./openapi.json) | OpenAPI 3.0 subset (`GET /api/v1/openapi.json` when server runs) |
 | [HARDWARE.md](./HARDWARE.md) | Simulator vs real readers, adapter rules |

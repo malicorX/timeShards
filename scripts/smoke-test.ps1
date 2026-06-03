@@ -13,6 +13,9 @@ $ErrorActionPreference = "Stop"
 Write-Host "Health check..."
 $health = Invoke-RestMethod -Uri "$ApiUrl/api/v1/health" -TimeoutSec 5
 Write-Host "  $($health.service) v$($health.version) - $($health.status) (db: $($health.database), demo_seeding=$($health.demo_seeding_enabled), hw=$($health.hardware_adapter))"
+if ($health.version -notmatch '^0\.2\.') {
+    throw "Expected API version 0.2.x, got $($health.version)"
+}
 if ($health.time_foundation) {
     $tf = $health.time_foundation
     Write-Host "  time_foundation: models=$($tf.workday_models) calendars=$($tf.work_calendars) active_ma=$($tf.active_employees) no_calendar=$($tf.employees_without_work_calendar) kw_no_soll=$($tf.current_week_drafts_without_soll)"
@@ -239,14 +242,19 @@ if ($pendingTs.Count -ge 1) {
 Write-Host "Payroll CSV export..."
 $payYear = (Get-Date).Year
 $payMonth = (Get-Date).Month
-$payrollResp = Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/payroll/export?year=$payYear&month=$payMonth&format=csv&aggregate=employee" -Headers $headers
-if ($payrollResp.StatusCode -ne 200) {
-    throw "Payroll export failed: $($payrollResp.StatusCode)"
+$payrollTmp = Join-Path $env:TEMP "timeshards-smoke-payroll.csv"
+Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/payroll/export?year=$payYear&month=$payMonth&format=csv&aggregate=employee" `
+    -Headers $headers -OutFile $payrollTmp | Out-Null
+$payrollBytes = [System.IO.File]::ReadAllBytes($payrollTmp)
+if ($payrollBytes.Length -lt 3 -or $payrollBytes[0] -ne 0xEF -or $payrollBytes[1] -ne 0xBB -or $payrollBytes[2] -ne 0xBF) {
+    throw "Payroll CSV missing UTF-8 BOM (Excel-friendly export)"
 }
-if ($payrollResp.Content -notmatch 'personal_nr;name') {
+$payrollText = [System.IO.File]::ReadAllText($payrollTmp)
+if ($payrollText -notmatch 'personal_nr;name') {
     throw "Payroll CSV missing expected header"
 }
-Write-Host "  payroll CSV OK ($($payrollResp.Content.Length) bytes)"
+Remove-Item -Force $payrollTmp -ErrorAction SilentlyContinue
+Write-Host "  payroll CSV OK ($($payrollBytes.Length) bytes, UTF-8 BOM)"
 
 $demoTemplates = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/shift-templates" -Headers $demoHeaders
 Write-Host "  shift_templates=$($demoTemplates.Count) (scoped to own employee)"

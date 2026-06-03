@@ -36,6 +36,8 @@ Clients are **online-first**: they call the server API (`http://<host>:47821` by
 - **[docs/TIME_MODEL.md](docs/TIME_MODEL.md)** — work calendars, Soll/Ist evaluation
 - **[docs/FOUNDATION.md](docs/FOUNDATION.md)** — time-model foundation status
 - **[docs/PRODUCTION.md](docs/PRODUCTION.md)** — production go-live (env, checklist, verify)
+- **[docs/PAYROLL_EXPORT.md](docs/PAYROLL_EXPORT.md)** — Lohn-CSV for payroll handoff
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — verify before push
 - **[docs/FOUNDATION_CHECKLIST.md](docs/FOUNDATION_CHECKLIST.md)** — admin checklist for Kalender/Soll
 - **[docs/openapi.json](docs/openapi.json)** — OpenAPI 3.0 subset (live: `GET /api/v1/openapi.json`)
 - **[docs/HARDWARE.md](docs/HARDWARE.md)** — hardware gateway and reader integration

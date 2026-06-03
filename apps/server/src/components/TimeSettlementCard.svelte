@@ -212,14 +212,16 @@
     Freigegebene Stundenzettel im Kalendermonat (Berlin). Für Lohnbüro / Excel — kein DATEV-Format.
   </p>
   <div class="grid-form">
+    <label class="muted" for="payroll-export-year">Jahr</label>
     <input
+      id="payroll-export-year"
       type="number"
       bind:value={settlementYear}
       min="2020"
       max="2035"
-      title="Jahr"
     />
-    <input type="number" bind:value={settlementMonth} min="1" max="12" title="Monat" />
+    <label class="muted" for="payroll-export-month">Monat</label>
+    <input id="payroll-export-month" type="number" bind:value={settlementMonth} min="1" max="12" />
     <select bind:value={payrollEmployeeFilter}>
       <option value="">Alle Mitarbeiter</option>
       {#each activeEmployees as e}

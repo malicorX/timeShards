@@ -7,6 +7,7 @@ All notable changes to this project are documented here.
 ### Added
 
 - [STATUS.md](STATUS.md) — v1 product scope vs long-term ROADMAP.
+- [CONTRIBUTING.md](CONTRIBUTING.md), [docs/PAYROLL_EXPORT.md](docs/PAYROLL_EXPORT.md).
 - `npm run verify:all` — `check:all` + `verify:foundation` in one command.
 
 ### Changed
@@ -14,6 +15,7 @@ All notable changes to this project are documented here.
 - Crate and app versions aligned to **0.2.0** (API health, Tauri bundles).
 - CI: `verify-foundation` job runs DB tests + API smoke (no duplicate DB test job on rust).
 - `start_all.ps1` prints Zeitbasis KPIs when the API comes up.
+- Lohn-CSV export prefixed with UTF-8 BOM for Excel (DE).
 
 ### Fixed
 

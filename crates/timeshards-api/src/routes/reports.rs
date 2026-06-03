@@ -179,8 +179,9 @@ async fn export_payroll(
         }
     }
 
+    // UTF-8 BOM helps Excel (DE) open semicolon CSV with correct encoding.
     let mut out = String::from(
-        "personal_nr;name;jahr;monat;kw_beginn;ist_min;ist_h;soll_min;soll_h;saldo_min;saldo_h;gutschrift_min;ueberstunden_min;gleitzeit_konto_min;ueberstunden_konto_min\n",
+        "\u{feff}personal_nr;name;jahr;monat;kw_beginn;ist_min;ist_h;soll_min;soll_h;saldo_min;saldo_h;gutschrift_min;ueberstunden_min;gleitzeit_konto_min;ueberstunden_konto_min\n",
     );
 
     if aggregate {
