@@ -169,10 +169,21 @@ After login, use the tabs:
 - Pending timesheets and absences (click KPI → jump to Zeit/Abwesenheit with filter); **Im Gebäude** / **Schichten** / **Tür-Alerts** jump to Zutritt or Zeit.
 - **Eingestempelt** count plus named list with last punch time.
 - **Im Gebäude** — people counted inside zones (from access events).
+- **Zeit ↔ Zutritt** — amber KPI when someone is clocked in but not inside (or inside without clock-in); list on Übersicht.
 - **Tür-Alerts** — doors that are open, forced open, or in alarm; **Zurücksetzen** closes the door and jumps to Zutritt.
 - **Zeitbasis** — if active employees lack a work calendar or draft timesheets have no Soll this week, amber KPIs appear; **Zeitbasis reparieren** assigns the standard calendar and rebuilds the current KW (`POST /api/v1/admin/foundation-fix`).
+- **Produktions-Checkliste** — go-live checklist (demo off, passwords, calendars, Soll, Zeit↔Zutritt). **Go-Live-Assistent** opens once when items are open (or via button); guides env, **Zeitbasis reparieren**, Personal filter, Stundenzettel. See [PRODUCTION.md](./PRODUCTION.md).
 
 ### Zeit
+
+The **Zeit** tab has sub-navigation:
+
+| Section | Purpose |
+|---------|---------|
+| **Arbeitskalender** | Work calendars, day models, employee assignments, rotation, KW copy |
+| **Schichtplanung** | Shift calendar and week templates (planning only; Soll comes from calendar) |
+| **Stundenzettel** | Timesheets, rebuild, approve, CSV/HTML export (HTML includes **Tagesdetails** when rebuilt) |
+| **Abschluss & Export** | Time accounts, monthly settlement, payroll CSV |
 
 - **Arbeitskalender & Tagesmodelle** — Sollzeit from the work calendar (Mo–Fr 8h seed, holidays, per-employee assignment, optional **Umschaltplan**, **KW kopieren**). Edit **Tagesmodell** (Soll minutes, Gleitzeit band) — saves via API and rebuilds affected timesheets. See [TIME_MODEL.md](./TIME_MODEL.md) and [FOUNDATION.md](./FOUNDATION.md).
 - **Zeitkonten** — Gleitzeit/Überstunden after timesheet approve; **Monatsabschluss** when all weeks in the month are approved (reconciliation only if weekly postings differ).
@@ -185,7 +196,8 @@ After login, use the tabs:
 - Approving **Abwesenheit** triggers timesheet rebuild for affected weeks.
 - **Geplante veröffentlichen** (count on button) publishes all `planned` shifts in the visible calendar week; orange nav badge = planned count.
 - **Heute** resets the shift calendar to the current week.
-- Exports: timesheet CSV / HTML (print to PDF from the browser).
+- Exports: timesheet CSV / HTML with per-day breakdown (print to PDF from the browser).
+- Production go-live: [PRODUCTION.md](./PRODUCTION.md).
 
 ### Abwesenheit
 

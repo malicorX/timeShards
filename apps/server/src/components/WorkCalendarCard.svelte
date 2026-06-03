@@ -205,20 +205,42 @@
     void refreshWorkCalendarWeekDays();
   }
 
+  async function generateWorkCalendarYearFor(year: number) {
+    const res = await api<{ inserted: number }>(
+      apiUrl,
+      `/api/v1/time/work-calendars/${selectedWorkCalendarId}/generate-year`,
+      { method: 'POST', body: JSON.stringify({ year }) },
+    );
+    return res.inserted;
+  }
+
   async function generateWorkCalendarYear() {
     if (!selectedWorkCalendarId) {
       notify('error', 'Arbeitskalender wählen');
       return;
     }
     try {
-      const res = await api<{ inserted: number }>(
-        apiUrl,
-        `/api/v1/time/work-calendars/${selectedWorkCalendarId}/generate-year`,
-        { method: 'POST', body: JSON.stringify({ year: calendarGenYear }) },
-      );
+      const inserted = await generateWorkCalendarYearFor(calendarGenYear);
       await refresh();
       onWeekChange?.();
-      notify('success', `${res.inserted} Kalendertage für ${calendarGenYear} ergänzt`);
+      notify('success', `${inserted} Kalendertage für ${calendarGenYear} ergänzt`);
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function generateWorkCalendarTwoYears() {
+    if (!selectedWorkCalendarId) {
+      notify('error', 'Arbeitskalender wählen');
+      return;
+    }
+    try {
+      const y = calendarGenYear;
+      const a = await generateWorkCalendarYearFor(y);
+      const b = await generateWorkCalendarYearFor(y + 1);
+      await refresh();
+      onWeekChange?.();
+      notify('success', `${a + b} Kalendertage für ${y} und ${y + 1} ergänzt`);
     } catch (e) {
       notify('error', e instanceof Error ? e.message : String(e));
     }
@@ -341,6 +363,9 @@
     <input type="number" bind:value={calendarGenYear} min="2020" max="2035" />
     <button class="secondary" type="button" onclick={generateWorkCalendarYear}>
       Jahr befüllen (Mo–Fr)
+    </button>
+    <button class="secondary" type="button" onclick={generateWorkCalendarTwoYears}>
+      {calendarGenYear} + {calendarGenYear + 1} befüllen
     </button>
     <button class="secondary" type="button" onclick={copyWorkCalendarWeek}>
       Diese KW → nächste KW kopieren

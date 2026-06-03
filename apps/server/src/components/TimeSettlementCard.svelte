@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api } from '../lib/api';
+  import { api, downloadFile } from '../lib/api';
   import { formatMinutes } from '../lib/formatMinutes';
 
   type Employee = {
@@ -38,6 +38,9 @@
   let settlementEmployeeId = $state('');
   let settlementYear = $state(new Date().getFullYear());
   let settlementMonth = $state(new Date().getMonth() + 1);
+  let payrollAggregate = $state(true);
+  let payrollEmployeeFilter = $state('');
+
   let monthSettlementPreview = $state<{
     worked_minutes: number;
     expected_minutes: number;
@@ -123,6 +126,24 @@
     }
   }
 
+  async function exportPayrollCsv() {
+    try {
+      const params = new URLSearchParams({
+        year: String(settlementYear),
+        month: String(settlementMonth),
+        format: 'csv',
+      });
+      if (payrollAggregate) params.set('aggregate', 'employee');
+      if (payrollEmployeeFilter) params.set('employee_id', payrollEmployeeFilter);
+      const path = `/api/v1/reports/payroll/export?${params}`;
+      const name = `lohn_export_${settlementYear}_${String(settlementMonth).padStart(2, '0')}.csv`;
+      await downloadFile(apiUrl, path, name);
+      notify('success', `Lohn-CSV ${settlementMonth}/${settlementYear} heruntergeladen`);
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : String(e));
+    }
+  }
+
   async function closeMonthSettlement() {
     if (!settlementEmployeeId) {
       notify('error', 'Mitarbeiter für Monatsabschluss wählen');
@@ -184,6 +205,32 @@
         Regel speichern
       </button>
     {/each}
+  </div>
+
+  <h4 style="margin: 1rem 0 0.5rem;">Lohn-Export (CSV)</h4>
+  <p class="muted" style="margin-bottom: 0.5rem;">
+    Freigegebene Stundenzettel im Kalendermonat (Berlin). Für Lohnbüro / Excel — kein DATEV-Format.
+  </p>
+  <div class="grid-form">
+    <input
+      type="number"
+      bind:value={settlementYear}
+      min="2020"
+      max="2035"
+      title="Jahr"
+    />
+    <input type="number" bind:value={settlementMonth} min="1" max="12" title="Monat" />
+    <select bind:value={payrollEmployeeFilter}>
+      <option value="">Alle Mitarbeiter</option>
+      {#each activeEmployees as e}
+        <option value={e.id}>{e.employee_no} — {e.display_name}</option>
+      {/each}
+    </select>
+    <label class="muted">
+      <input type="checkbox" bind:checked={payrollAggregate} />
+      Eine Zeile pro Mitarbeiter (Monatssumme)
+    </label>
+    <button class="secondary" type="button" onclick={exportPayrollCsv}>Lohn-CSV herunterladen</button>
   </div>
 
   <h4 style="margin: 1rem 0 0.5rem;">Monatsabschluss</h4>

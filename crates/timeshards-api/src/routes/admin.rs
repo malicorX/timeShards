@@ -178,6 +178,15 @@ struct DoorAlertDto {
     status: String,
 }
 
+/// Stamp vs zone occupancy mismatch (`clocked_not_inside` | `inside_not_clocked`).
+#[derive(Serialize)]
+struct TimeAccessMismatchDto {
+    employee_id: String,
+    employee_no: String,
+    display_name: String,
+    kind: &'static str,
+}
+
 #[derive(Serialize)]
 struct DashboardDto {
     pending_timesheets: i64,
@@ -201,6 +210,9 @@ struct DashboardDto {
     employees_without_work_calendar: i64,
     /// Draft/rejected timesheets this week with Soll=0 despite an active calendar (rebuild recommended).
     timesheets_current_week_no_soll: i64,
+    /// Active employees where clock state and building occupancy disagree.
+    time_access_mismatch_count: i64,
+    time_access_mismatches: Vec<TimeAccessMismatchDto>,
 }
 
 fn dashboard_week_range() -> (String, String) {
@@ -324,20 +336,62 @@ async fn dashboard(
         .fetch_all(&state.db)
         .await
         .map_err(|e| ApiError::internal(e.to_string()))?;
-    let employee_ids: Vec<String> =
-        sqlx::query_scalar("SELECT id FROM employees WHERE active_to IS NULL")
-            .fetch_all(&state.db)
-            .await
-            .map_err(|e| ApiError::internal(e.to_string()))?;
+    let active_employees: Vec<(String, String, String)> = sqlx::query_as(
+        "SELECT id, employee_no, display_name FROM employees WHERE active_to IS NULL ORDER BY employee_no",
+    )
+    .fetch_all(&state.db)
+    .await
+    .map_err(|e| ApiError::internal(e.to_string()))?;
     let mut inside_employees = HashSet::new();
     for zid in &zone_ids {
-        for eid in &employee_ids {
+        for (eid, _, _) in &active_employees {
             if employee_inside_zone(&state.db, eid, zid).await? {
                 inside_employees.insert(eid.as_str());
             }
         }
     }
     let people_in_building = inside_employees.len() as i64;
+
+    let clocked_ids: std::collections::HashSet<String> = sqlx::query_scalar(
+        r#"
+        SELECT e.id FROM employees e
+        WHERE e.active_to IS NULL
+          AND (
+            SELECT te.kind FROM time_events te
+            WHERE te.employee_id = e.id
+            ORDER BY te.occurred_at DESC
+            LIMIT 1
+          ) IN ('clock_in', 'break_start', 'break_end')
+        "#,
+    )
+    .fetch_all(&state.db)
+    .await
+    .map_err(|e| ApiError::internal(e.to_string()))?
+    .into_iter()
+    .collect();
+
+    let mut time_access_mismatches = Vec::new();
+    for (eid, employee_no, display_name) in &active_employees {
+        let inside = inside_employees.contains(eid.as_str());
+        let clocked = clocked_ids.contains(eid);
+        let kind = if clocked && !inside {
+            Some("clocked_not_inside")
+        } else if inside && !clocked {
+            Some("inside_not_clocked")
+        } else {
+            None
+        };
+        if let Some(kind) = kind {
+            time_access_mismatches.push(TimeAccessMismatchDto {
+                employee_id: eid.clone(),
+                employee_no: employee_no.clone(),
+                display_name: display_name.clone(),
+                kind,
+            });
+        }
+    }
+    let time_access_mismatch_count = time_access_mismatches.len() as i64;
+    time_access_mismatches.truncate(25);
 
     let today = Utc::now().format("%Y-%m-%d").to_string();
     let employees_without_work_calendar: i64 = sqlx::query_scalar(
@@ -400,6 +454,8 @@ async fn dashboard(
         hardware_adapter: hardware_adapter_active(),
         employees_without_work_calendar,
         timesheets_current_week_no_soll,
+        time_access_mismatch_count,
+        time_access_mismatches,
     }))
 }
 

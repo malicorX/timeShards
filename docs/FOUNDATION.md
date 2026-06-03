@@ -81,7 +81,7 @@ See [TIME_MODEL.md](./TIME_MODEL.md) for terminology and API list.
 
 ## Not yet (later phases)
 
-- Payroll export / DATEV bridge (out of scope for foundation)
+- DATEV bridge (CSV Lohn-Export exists: `GET /reports/payroll/export`)
 - Rich payroll rules for `unbezahlt` (Soll 0 today; no Konten split yet)
 - Bulk calendar editor beyond KW copy + generate-year
 

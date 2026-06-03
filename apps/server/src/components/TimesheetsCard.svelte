@@ -62,6 +62,7 @@
     pendingTimesheets = 0,
     onMessage,
     onDashboardChange,
+    settlementOnly = false,
   }: {
     apiUrl: string;
     employees: Employee[];
@@ -74,6 +75,8 @@
     pendingTimesheets?: number;
     onMessage?: (msg: UiMessage) => void;
     onDashboardChange?: () => void | Promise<void>;
+    /** Abschluss tab: Konten, Monat, Lohn-CSV first */
+    settlementOnly?: boolean;
   } = $props();
 
   let timesheets = $state<TimesheetRow[]>([]);
@@ -300,9 +303,19 @@
       void refresh();
     }
   });
+
+  $effect(() => {
+    if (active && settlementOnly && timesheetFilter === 'all') {
+      timesheetFilter = 'approved';
+    }
+  });
 </script>
 
-{#if canCorrectTime}
+{#if canApprove && settlementOnly}
+  <TimeSettlementCard {apiUrl} {employees} {active} onMessage={onMessage} />
+{/if}
+
+{#if canCorrectTime && !settlementOnly}
   <div class="card" style="margin-top: 1rem;">
     <h3>Zeitkorrektur</h3>
     <div class="grid-form">
@@ -356,7 +369,7 @@
         CSV Export
       </button>
       <button class="secondary" type="button" onclick={() => exportTimesheets('html')}>
-        HTML / PDF
+        HTML / PDF (mit Tagesdetails)
       </button>
     {/if}
   </div>
@@ -388,7 +401,7 @@
       </select>
     {/if}
   </div>
-  {#if canApprove}
+  {#if canApprove && !settlementOnly}
     <TimeSettlementCard {apiUrl} {employees} {active} onMessage={onMessage} />
   {/if}
   <h3 style="margin-top: 1rem;">

@@ -116,6 +116,25 @@ input {
   color: #fff;
 }
 
+.sub-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.sub-nav button {
+  background: #1e2433;
+  color: #c5cad6;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.sub-nav button.active {
+  background: #243056;
+  color: #fff;
+}
+
 .content {
   padding: 1.25rem 1.5rem;
 }

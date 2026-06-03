@@ -57,6 +57,9 @@ $dash = Invoke-RestMethod -Uri "$ApiUrl/api/v1/admin/dashboard" -Headers $header
 Write-Host "  Clocked in: $($dash.clocked_in_employees)/$($dash.employees_total)"
 Write-Host "  Pending timesheets: $($dash.pending_timesheets), drafts: $($dash.draft_timesheets), absences: $($dash.pending_absences)"
 Write-Host "  Shifts this week: $($dash.shifts_this_week) (planned: $($dash.planned_shifts_this_week))"
+if ($null -ne $dash.time_access_mismatch_count) {
+    Write-Host "  Time vs access mismatches: $($dash.time_access_mismatch_count)"
+}
 if ($null -ne $dash.employees_without_work_calendar) {
     Write-Host "  Time foundation: no_calendar=$($dash.employees_without_work_calendar) kw_no_soll=$($dash.timesheets_current_week_no_soll)"
     if ($dash.employees_without_work_calendar -gt 0) {
@@ -151,6 +154,17 @@ if ($withSoll.Count -lt 1) {
 }
 Write-Host "  timesheets with Soll: $($withSoll.Count)/$($tsList.Count)"
 
+Write-Host "Timesheet HTML export (Tagesdetails)..."
+$htmlUri = "$ApiUrl/api/v1/reports/timesheets/export?format=html&status=draft"
+$htmlResp = Invoke-WebRequest -Uri $htmlUri -Headers $headers -UseBasicParsing
+if ($htmlResp.StatusCode -ne 200) {
+    throw "Timesheet HTML export failed: $($htmlResp.StatusCode)"
+}
+if ($htmlResp.Content -notmatch 'Tagesdetails') {
+    throw "Expected Tagesdetails section in HTML export after rebuild"
+}
+Write-Host "  HTML export OK ($($htmlResp.Content.Length) bytes)"
+
 Write-Host "Time accounts (list)..."
 $adminAccounts = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/accounts" -Headers $headers
 Write-Host "  admin account rows=$($adminAccounts.Count)"
@@ -221,6 +235,18 @@ if ($pendingTs.Count -ge 1) {
 } else {
     throw "Expected pending timesheet to test account posting on approve"
 }
+
+Write-Host "Payroll CSV export..."
+$payYear = (Get-Date).Year
+$payMonth = (Get-Date).Month
+$payrollResp = Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/payroll/export?year=$payYear&month=$payMonth&format=csv&aggregate=employee" -Headers $headers
+if ($payrollResp.StatusCode -ne 200) {
+    throw "Payroll export failed: $($payrollResp.StatusCode)"
+}
+if ($payrollResp.Content -notmatch 'personal_nr;name') {
+    throw "Payroll CSV missing expected header"
+}
+Write-Host "  payroll CSV OK ($($payrollResp.Content.Length) bytes)"
 
 $demoTemplates = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/shift-templates" -Headers $demoHeaders
 Write-Host "  shift_templates=$($demoTemplates.Count) (scoped to own employee)"

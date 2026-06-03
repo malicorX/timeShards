@@ -27,7 +27,7 @@ Errors return JSON with a `message` field and appropriate HTTP status.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/v1/admin/dashboard` | KPIs (incl. `draft_timesheets`, `planned_shifts_this_week`, `employees_without_work_calendar`, `timesheets_current_week_no_soll`), door alerts, occupancy, `demo_seeding_enabled`, `default_password_login_blocked`, `hardware_adapter` |
+| GET | `/api/v1/admin/dashboard` | KPIs (incl. `draft_timesheets`, `planned_shifts_this_week`, `employees_without_work_calendar`, `timesheets_current_week_no_soll`, `time_access_mismatch_count`, `time_access_mismatches[]`), door alerts, occupancy, `demo_seeding_enabled`, `default_password_login_blocked`, `hardware_adapter` |
 | POST | `/api/v1/admin/foundation-fix` | Assign missing default work calendars + rebuild current calendar week for all employees |
 | POST | `/api/v1/admin/employees/{id}/grant-work-calendar` | Standard-Arbeitskalender wenn noch keine Zuordnung |
 | GET | `/api/v1/admin/sites` | Sites (name, timezone) |
@@ -147,6 +147,7 @@ Omit or empty `employee_no` for auto-numbering (`E0001`, …). With `issue_badge
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/reports/timesheets/export` | `?format=csv\|html&status=&period_start=` — employees without manager/HR role only see their own rows |
+| GET | `/api/v1/reports/payroll/export` | `?year=&month=&format=csv&aggregate=employee&employee_id=` — approved weeks in calendar month (Berlin); semicolon CSV for payroll |
 | GET | `/api/v1/reports/access/export` | `?format=csv\|html&from=&to=&limit=` — without manager/HR/security role, only own events |
 
 ## Roles (default seed)

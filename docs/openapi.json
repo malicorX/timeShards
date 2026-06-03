@@ -119,7 +119,7 @@
     },
     "/api/v1/admin/dashboard": {
       "get": {
-        "summary": "KPIs, door alerts, occupancy, employees_without_work_calendar, timesheets_current_week_no_soll"
+        "summary": "KPIs, door alerts, occupancy, time_access_mismatch_count, employees_without_work_calendar, timesheets_current_week_no_soll"
       }
     },
     "/api/v1/admin/foundation-fix": {

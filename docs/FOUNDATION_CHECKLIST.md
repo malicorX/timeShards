@@ -30,14 +30,17 @@ Nach Migration: `npm run foundation:health` und ggf. **Zeitbasis reparieren** in
 
 ## Vor dem produktiven Betrieb
 
+Server-UI: **Übersicht** → **Produktions-Checkliste** / **Go-Live-Assistent** (Schritte Umgebung, Zeitbasis, Personal, Stundenzettel, Zeit↔Zutritt). Siehe [PRODUCTION.md](./PRODUCTION.md).
+
 | Schritt | Wo |
 |--------|-----|
-| Jeder aktive MA hat Arbeitskalender | Personal → Spalte/Filter **Kein Arbeitskalender** oder Übersicht-KPI |
+| Jeder aktive MA hat Arbeitskalender | Personal → Filter **ohne Kalender** (Assistent/KPI) oder Zeit → MA-Zuordnung |
 | Teilzeit-% stimmt | Zeit → MA-Zuordnung |
 | Soll passt zum Vertrag | Zeit → Tagesmodell bearbeiten / Kalendertage |
 | Schichtvorlagen ≠ Soll | Nur Planung; Soll kommt aus Kalender |
 | Test-Stempeln | Client: KW zeigt Ist · Soll · Saldo |
 | Stundenzettel-Entwurf | Nach **Gehen** auto-rebuild; sonst **Neu berechnen** |
+| Stempel vs. Gebäude | Übersicht **Zeit ↔ Zutritt** = 0 oder bewusst dokumentiert ([PRODUCTION.md](./PRODUCTION.md)) |
 
 ## Wenn etwas fehlt
 
@@ -58,6 +61,7 @@ Nach Migration: `npm run foundation:health` und ggf. **Zeitbasis reparieren** in
 
 ```powershell
 npm run verify:foundation   # cargo test timeshards-db + smoke:api
+npm run smoke:production    # Demo aus, Standardpasswörter blockiert
 ```
 
 ## Bewusst nicht in der Basis
