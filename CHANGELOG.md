@@ -4,9 +4,18 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-06-02
+
 ### Added
 
 - `GET /api/v1/reports/absences/export` — approved absences overlapping month (payroll handoff CSV).
+- Server **Monats-Paket** button (Lohn- + Abwesenheiten-CSV); Go-Live wizard step **Lohn-Export**.
+- [docs/PHASE2.md](docs/PHASE2.md) — post-v1 roadmap tracks.
+
+### Changed
+
+- Smoke creates and approves an in-month absence before testing absences payroll export.
+- [FOUNDATION_CHECKLIST.md](docs/FOUNDATION_CHECKLIST.md), [PRODUCTION.md](docs/PRODUCTION.md), [GETTING_STARTED.md](docs/GETTING_STARTED.md) — payroll handoff steps.
 
 ## [0.2.1] — 2026-06-02
 

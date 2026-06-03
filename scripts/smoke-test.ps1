@@ -257,6 +257,26 @@ Remove-Item -Force $payrollTmp -ErrorAction SilentlyContinue
 Write-Host "  payroll CSV OK ($($payrollBytes.Length) bytes, UTF-8 BOM)"
 
 Write-Host "Absences payroll CSV export..."
+$emps = Invoke-RestMethod -Uri "$ApiUrl/api/v1/admin/employees" -Headers $headers
+if ($emps.Count -lt 1) {
+    throw "Need at least one employee for absences export smoke"
+}
+$smokeEmpId = $emps[0].id
+$absDay = [Math]::Min(15, [DateTime]::DaysInMonth($payYear, $payMonth))
+$absStart = "{0:0000}-{1:00}-{2:00}T08:00:00+02:00" -f $payYear, $payMonth, $absDay
+$absEnd = "{0:0000}-{1:00}-{2:00}T17:00:00+02:00" -f $payYear, $payMonth, ($absDay + 1)
+$absCreateBody = @{
+    employee_id  = $smokeEmpId
+    absence_type = 'urlaub'
+    starts_at    = $absStart
+    ends_at      = $absEnd
+    reason       = 'smoke payroll export'
+} | ConvertTo-Json
+$smokeAbs = Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/absences" -Headers $headers `
+    -Body $absCreateBody -ContentType 'application/json'
+Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/absences/$($smokeAbs.id)/approve" -Headers $headers `
+    -Body '{}' -ContentType 'application/json' | Out-Null
+Write-Host "  created + approved in-month absence $($smokeAbs.id)"
 $absTmp = Join-Path $env:TEMP "timeshards-smoke-absences.csv"
 Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/absences/export?year=$payYear&month=$payMonth&format=csv" `
     -Headers $headers -OutFile $absTmp | Out-Null
@@ -264,8 +284,11 @@ $absText = [System.IO.File]::ReadAllText($absTmp)
 if ($absText -notmatch 'personal_nr;name;jahr;monat;typ') {
     throw "Absences export CSV missing expected header"
 }
+if ($absText -match '\(keine freigegebenen Abwesenheiten') {
+    throw "Expected approved absence row in payroll absences export"
+}
 Remove-Item -Force $absTmp -ErrorAction SilentlyContinue
-Write-Host "  absences export CSV OK"
+Write-Host "  absences export CSV OK (in-month row)"
 
 $demoTemplates = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/shift-templates" -Headers $demoHeaders
 Write-Host "  shift_templates=$($demoTemplates.Count) (scoped to own employee)"

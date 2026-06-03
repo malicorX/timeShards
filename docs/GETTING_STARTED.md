@@ -183,7 +183,7 @@ The **Zeit** tab has sub-navigation:
 | **Arbeitskalender** | Work calendars, day models, employee assignments, rotation, KW copy |
 | **Schichtplanung** | Shift calendar and week templates (planning only; Soll comes from calendar) |
 | **Stundenzettel** | Timesheets, rebuild, approve, CSV/HTML export (HTML includes **Tagesdetails** when rebuilt) |
-| **Abschluss & Export** | Time accounts, monthly settlement, payroll CSV |
+| **Abschluss & Export** | Zeitkonten, Monatsabschluss, Lohn- + Abwesenheiten-CSV, **Monats-Paket** (beide Dateien) |
 
 - **Arbeitskalender & Tagesmodelle** — Sollzeit from the work calendar (Mo–Fr 8h seed, holidays, per-employee assignment, optional **Umschaltplan**, **KW kopieren**). Edit **Tagesmodell** (Soll minutes, Gleitzeit band) — saves via API and rebuilds affected timesheets. See [TIME_MODEL.md](./TIME_MODEL.md) and [FOUNDATION.md](./FOUNDATION.md).
 - **Zeitkonten** — Gleitzeit/Überstunden after timesheet approve; **Monatsabschluss** when all weeks in the month are approved (reconciliation only if weekly postings differ).

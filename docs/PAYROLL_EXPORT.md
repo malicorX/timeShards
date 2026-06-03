@@ -57,7 +57,12 @@ UTF-8 BOM for Excel. Placeholder row if none in month.
 
 ## UI
 
-Server → **Zeit** → **Abschluss & Export** → **Lohn-CSV** / **Abwesenheiten-CSV**.
+Server → **Zeit** → **Abschluss & Export**:
+
+- **Monats-Paket (beide CSV)** — downloads Lohn- then Abwesenheiten-CSV for the selected month
+- **Lohn-CSV** / **Abwesenheiten-CSV** — individual files
+
+Go-Live-Assistent includes a **Lohn-Export** step linking here.
 
 ## Verify
 

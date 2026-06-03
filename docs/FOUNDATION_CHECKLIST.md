@@ -57,6 +57,11 @@ Server-UI: **Übersicht** → **Produktions-Checkliste** / **Go-Live-Assistent**
 - [ ] Freigabe → Buchung auf **Gleitzeit** / **Überstunden** (Zeitkonten)
 - [ ] Monatsabschluss erst wenn alle KW des Monats **freigegeben**
 
+## Lohn-Handoff (CSV, kein DATEV)
+
+- [ ] Genehmigte Abwesenheiten des Monats liegen vor
+- [ ] **Monats-Paket** oder einzelne CSVs unter Zeit → **Abschluss & Export** — siehe [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md)
+
 ## Verify (Entwicklung / CI)
 
 ```powershell
@@ -66,6 +71,6 @@ npm run smoke:production    # Demo aus, Standardpasswörter blockiert
 
 ## Bewusst nicht in der Basis
 
-- DATEV / Lohnexport
+- DATEV-Import (nur Lohn- + Abwesenheiten-CSV)
 - Ausführliche `unbezahlt`-Kontenlogik
 - Vollständiger Jahres-Kalender-Editor (KW kopieren + Jahr befüllen reicht für v1)

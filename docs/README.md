@@ -9,10 +9,12 @@
 | [FOUNDATION_CHECKLIST.md](./FOUNDATION_CHECKLIST.md) | Admin go-live checklist (Kalender, Soll, repair) |
 | [PRODUCTION.md](./PRODUCTION.md) | Production deploy (env vars, Go-Live, verify) |
 | [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md) | Lohn-CSV columns and parameters |
-| [releases/v0.2.0.md](./releases/v0.2.0.md) | Release notes for tag `v0.2.0` (GitHub Release body) |
+| [releases/v0.2.2.md](./releases/v0.2.2.md) | Latest release notes (payroll month bundle) |
+| [releases/v0.2.0.md](./releases/v0.2.0.md) | Release notes for tag `v0.2.0` |
 | [openapi.json](./openapi.json) | OpenAPI 3.0 subset (`GET /api/v1/openapi.json` when server runs) |
 | [HARDWARE.md](./HARDWARE.md) | Simulator vs real readers, adapter rules |
 | [../STATUS.md](../STATUS.md) | What ships today (v1 foundation summary) |
+| [PHASE2.md](./PHASE2.md) | Post-v1 tracks (DATEV, hardware, …) |
 | [../README.md](../README.md) | Project overview |
 | [../ROADMAP.md](../ROADMAP.md) | Product direction (high level) |
 | [../ROADMAP_DETAILS.md](../ROADMAP_DETAILS.md) | Detailed vision and modules |

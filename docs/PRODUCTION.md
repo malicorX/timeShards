@@ -52,7 +52,7 @@ Für strikte Kopplung: Prozess + ggf. spätere Automatik (nicht in v1).
 1. Wochen-Stundenzettel: **Neu berechnen** → Ist/Soll/Saldo + Tagesdetails prüfen
 2. Freigabe → Buchung auf Gleitzeit/Überstunden
 3. **Monatsabschluss** (Zeit → Abschluss & Export) wenn alle KW freigegeben
-4. **Lohn-CSV** für die Payroll-Vorstufe (kein DATEV in v1) — siehe [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md)
+4. **Monats-Paket** oder **Lohn-CSV** + **Abwesenheiten-CSV** für die Payroll-Vorstufe (kein DATEV in v1) — siehe [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md)
 5. **HTML / PDF** Stundenzettel mit Tagesdetails: Zeit → Stundenzettel → Export
 
 ## 6. Verify vor Go-Live

@@ -40,6 +40,7 @@
     { title: 'Personal', body: 'personnel' },
     { title: 'Stundenzettel', body: 'timesheets' },
     { title: 'Zeit ↔ Zutritt', body: 'mismatch' },
+    { title: 'Lohn-Export', body: 'payroll' },
     { title: 'Abschluss', body: 'done' },
   ] as const;
 
@@ -214,6 +215,23 @@
             Schließen — Liste auf Übersicht prüfen
           </button>
         {/if}
+      {:else if steps[step].body === 'payroll'}
+        <p>
+          Nach Freigabe aller Wochen-Stundenzettel und relevanter Abwesenheiten im Monat:
+        </p>
+        <ul class="compact-list">
+          <li><strong>Lohn-CSV</strong> — Ist/Soll/Saldo, Gleitzeit/Überstunden-Konten</li>
+          <li><strong>Abwesenheiten-CSV</strong> — genehmigte Urlaub/Krank im Monat</li>
+        </ul>
+        <button
+          type="button"
+          onclick={() => {
+            onNavigate?.({ tab: 'time', timeSection: 'abschluss' });
+            closeWizard();
+          }}
+        >
+          Zeit → Abschluss & Export
+        </button>
       {:else}
         {#if allOk}
           <p class="success">

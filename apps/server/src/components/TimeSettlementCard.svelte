@@ -161,6 +161,12 @@
     }
   }
 
+  async function exportPayrollMonthBundle() {
+    await exportPayrollCsv();
+    await exportAbsencesCsv();
+    notify('success', `Monats-Paket ${settlementMonth}/${settlementYear}: Lohn- + Abwesenheiten-CSV`);
+  }
+
   async function closeMonthSettlement() {
     if (!settlementEmployeeId) {
       notify('error', 'Mitarbeiter für Monatsabschluss wählen');
@@ -226,7 +232,8 @@
 
   <h4 style="margin: 1rem 0 0.5rem;">Lohn-Export (CSV)</h4>
   <p class="muted" style="margin-bottom: 0.5rem;">
-    Freigegebene Stundenzettel im Kalendermonat (Berlin). Für Lohnbüro / Excel — kein DATEV-Format.
+    Freigegebene Stundenzettel und Abwesenheiten im Kalendermonat (Berlin). Für Lohnbüro / Excel — kein
+    DATEV-Format. Details: <code>docs/PAYROLL_EXPORT.md</code>
   </p>
   <div class="grid-form">
     <label class="muted" for="payroll-export-year">Jahr</label>
@@ -249,7 +256,8 @@
       <input type="checkbox" bind:checked={payrollAggregate} />
       Eine Zeile pro Mitarbeiter (Monatssumme)
     </label>
-    <button class="secondary" type="button" onclick={exportPayrollCsv}>Lohn-CSV herunterladen</button>
+    <button type="button" onclick={exportPayrollMonthBundle}>Monats-Paket (beide CSV)</button>
+    <button class="secondary" type="button" onclick={exportPayrollCsv}>Lohn-CSV</button>
     <button class="secondary" type="button" onclick={exportAbsencesCsv}>Abwesenheiten-CSV</button>
   </div>
 
