@@ -3,6 +3,8 @@
   import { formatMinutes } from '../lib/formatMinutes';
   import { statusLabel } from '../lib/statusLabels';
   import { formatIsoShort, formatPeriodRange, calendarWeekLabel } from '../lib/datetime';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
+  import TsEmptyState from '@timeshards/shared/ui/TsEmptyState.svelte';
 
   type TimesheetRow = {
     id: string;
@@ -165,7 +167,10 @@
   });
 </script>
 
-<h2>Freigaben</h2>
+<TsPageHeader
+  title="Freigaben"
+  lead="Offene Stundenzettel und Abwesenheiten freigeben oder ablehnen. Team-Entwürfe vorher einreichen."
+/>
 <input bind:value={decisionNote} placeholder="Kommentar bei Ablehnung (optional)" />
 {#if pendingTimesheets.length > 0 || pendingAbsences.length > 0 || teamDraftQueueCount > 0}
   <div class="btn-row" style="margin-top: 0.5rem;">
@@ -209,7 +214,7 @@
       </div>
     </div>
   {:else}
-    <p class="muted">Keine offenen Stundenzettel</p>
+    <TsEmptyState message="Keine offenen Stundenzettel zur Freigabe." />
   {/each}
 </div>
 <div class="card" style="margin-top: 1rem;">
@@ -230,7 +235,7 @@
       </div>
     </div>
   {:else}
-    <p class="muted">Keine offenen Anträge</p>
+    <TsEmptyState message="Keine offenen Abwesenheitsanträge." />
   {/each}
 </div>
 <div class="card" style="margin-top: 1rem;">
@@ -259,6 +264,6 @@
       </button>
     </div>
   {:else}
-    <p class="muted">Keine Team-Entwürfe</p>
+    <TsEmptyState message="Keine Team-Entwürfe — alle Stundenzettel eingereicht." />
   {/each}
 </div>

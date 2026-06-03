@@ -2,6 +2,12 @@
 
 v1 ships **semicolon CSV** exports only — see [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md). Native DATEV import is **Phase 2** ([PHASE2.md](./PHASE2.md)).
 
+## v1 product decision (2026-06)
+
+**CSV-only for payroll handoff in v1.** Lohn-CSV and Abwesenheiten-CSV (UTF-8 BOM) are the supported export path. No native DATEV import file in the product until a bureau validates column mapping and provides a sample import spec (see below).
+
+Pilot payroll runs should record gaps in this doc or a short issue — not block v1 go-live on DATEV binary formats.
+
 ## Before implementation
 
 Collect from payroll bureau or customer:

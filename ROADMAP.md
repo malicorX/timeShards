@@ -59,7 +59,7 @@ Treat as done unless a row is marked **partial**:
 
 ---
 
-### M2 — UX & informativeness 🔄 *in progress*
+### M2 — UX & informativeness ✅ *mostly complete*
 
 **Goal:** Server and client feel like **one modern product**—every important number clickable, clear context on every screen.
 
@@ -68,17 +68,17 @@ Treat as done unless a row is marked **partial**:
 | Shared design tokens (`tokens.css`) | ✅ | `apps/shared/styles/` |
 | `TsCard` / `TsPageHeader` / `TsFlash` shared components | ✅ | `apps/shared/ui/` |
 | Perioden screen as reference (master–detail, tabs) | ✅ | `WorkCalendarCard` + Feiertage/Umschalt |
-| Overview KPIs → deep links | ✅ partial | `OverviewTab` |
-| Stundenzettel row → Tagesdetails | ✅ partial | `TimesheetsCard` |
+| Overview KPIs → deep links | ✅ | `OverviewTab` (incl. Zeit↔Zutritt → Stundenzettel) |
+| Stundenzettel row → Tagesdetails | ✅ | `TimesheetsCard` expand + `scope=col` |
 | Client Zeit pillar: status + Soll/Ist prominent | ✅ | `ClientTimePillar` hero |
 | Zutritt / Personal: pick-list + detail | ✅ | `AccessTab`, `PersonnelTab` |
-| Empty states + lead text on all main tabs | ✅ partial | Headers on Personal/Zutritt/Abwesenheit/System/Zeit |
+| Empty states + lead text on all main tabs | ✅ | `TsEmptyState` + subsection leads (Zeit, Client) |
 
 **Exit:** UI guide Phase B checklist; no a11y warnings on new interactive patterns; 2–3 screenshot baselines for regression (optional).
 
 ---
 
-### M3 — Perioden & calendar completeness ⬜
+### M3 — Perioden & calendar completeness ✅ *mostly complete*
 
 **Goal:** HR can **create and maintain** Tagesperioden and Jahresperioden without SQL or seed-only workflows.
 
@@ -113,7 +113,7 @@ Treat as done unless a row is marked **partial**:
 
 ---
 
-### M5 — Payroll & DATEV feedback ⬜
+### M5 — Payroll & DATEV feedback ✅ *v1 scope locked*
 
 **Goal:** Bureau or DATEV consultant validates CSVs; gaps become a short spec—not a big bang integration.
 
@@ -121,10 +121,11 @@ Treat as done unless a row is marked **partial**:
 |------|--------|-------|
 | Lohn-CSV + Abwesenheiten-CSV | ✅ | UTF-8 BOM |
 | [DATEV.md](./docs/DATEV.md) mapping draft | ✅ | |
-| Column feedback from first pilot payroll run | ⬜ | |
+| **CSV-only for v1** decision | ✅ | DATEV.md § v1 product decision |
+| Column feedback from first pilot payroll run | ⬜ | After first live payroll month |
 | Optional: DATEV-native export (Phase 2) | ⬜ | After feedback |
 
-**Exit:** Signed-off column list OR explicit “CSV-only for v1” decision recorded in DATEV.md.
+**Exit:** Signed-off column list OR explicit “CSV-only for v1” decision recorded in DATEV.md. ✅
 
 ---
 

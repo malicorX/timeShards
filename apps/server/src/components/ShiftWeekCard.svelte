@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api } from '../lib/api';
   import { statusLabel } from '../lib/statusLabels';
+  import TsEmptyState from '@timeshards/shared/ui/TsEmptyState.svelte';
   import {
     toLocalDatetimeInputValue,
     fromLocalDatetimeInputValue,
@@ -320,6 +321,14 @@
   });
 </script>
 
+<div class="ts-section-intro">
+  <h3>Schichtplanung</h3>
+  <p class="ts-lead">
+    Schichten sind Planung — Sollzeit kommt aus Perioden. Vorlagen erzeugen Wochen-Schichten; veröffentlichen für
+    Mitarbeiteransicht.
+  </p>
+</div>
+
 <div class="card" style="margin-top: 1rem;">
   <h3>Wochenvorlagen (geplante Schichten)</h3>
   <div class="grid-form">
@@ -433,7 +442,7 @@
   </div>
   <h3 style="margin-top: 0.5rem;">Schichten in dieser Woche</h3>
   {#if shifts.length === 0}
-    <p class="muted">Keine Schichten in Filter/Kalenderwoche</p>
+    <TsEmptyState message="Keine Schichten in dieser KW — Vorlage anwenden oder Einzelschicht anlegen." />
   {/if}
   {#each shifts as s}
     <div class="row-card">

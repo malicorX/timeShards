@@ -3,6 +3,7 @@
   import { formatIsoLocalShort, fromLocalDatetimeInputValue, toLocalDatetimeInputValue } from '../lib/datetime';
   import { statusLabel } from '../lib/statusLabels';
   import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
+  import TsEmptyState from '@timeshards/shared/ui/TsEmptyState.svelte';
 
   type Employee = {
     id: string;
@@ -238,6 +239,6 @@
       {/if}
     </div>
   {:else}
-    <p class="muted">Keine Anträge</p>
+    <TsEmptyState message="Keine Anträge für diesen Filter — neuen Antrag oben stellen." />
   {/each}
 </div>

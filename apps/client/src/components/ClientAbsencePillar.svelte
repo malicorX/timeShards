@@ -2,6 +2,8 @@
   import { api } from '../lib/api';
   import { toLocalDatetimeInputValue, fromLocalDatetimeInputValue, formatIsoShort } from '../lib/datetime';
   import { statusLabel } from '../lib/statusLabels';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
+  import TsEmptyState from '@timeshards/shared/ui/TsEmptyState.svelte';
 
   type UiMessage = { type: 'error' | 'success'; text: string };
   type AbsenceRow = {
@@ -103,7 +105,10 @@
   }
 </script>
 
-<h2>Abwesenheit</h2>
+<TsPageHeader
+  title="Abwesenheit"
+  lead="Urlaub und Krankheit beantragen. Konfliktprüfung vor dem Absenden."
+/>
 <div class="card">
   <div class="grid-form">
     <select bind:value={newAbsence.absence_type}>
@@ -132,17 +137,19 @@
     <option value="approved">Freigegeben</option>
     <option value="rejected">Abgelehnt</option>
   </select>
-  <ul>
-    {#each absences as a}
-      <li class="row-card">
-        {statusLabel(a.absence_type)} · {formatIsoShort(a.starts_at)} → {formatIsoShort(a.ends_at)} ·
-        {statusLabel(a.status)}
-        {#if a.status === 'pending' || a.status === 'approved'}
-          <button class="secondary" type="button" onclick={() => cancelAbsence(a.id)}>Stornieren</button>
-        {/if}
-      </li>
-    {:else}
-      <li class="muted">Keine Anträge</li>
-    {/each}
-  </ul>
+  {#if absences.length === 0}
+    <TsEmptyState message="Keine Anträge für diesen Filter." />
+  {:else}
+    <ul>
+      {#each absences as a}
+        <li class="row-card">
+          {statusLabel(a.absence_type)} · {formatIsoShort(a.starts_at)} → {formatIsoShort(a.ends_at)} ·
+          {statusLabel(a.status)}
+          {#if a.status === 'pending' || a.status === 'approved'}
+            <button class="secondary" type="button" onclick={() => cancelAbsence(a.id)}>Stornieren</button>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  {/if}
 </div>

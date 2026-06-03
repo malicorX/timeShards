@@ -12,6 +12,11 @@
     weekRangeContaining,
   } from '../lib/datetime';
   import TimeSettlementCard from './TimeSettlementCard.svelte';
+  import TsEmptyState from '@timeshards/shared/ui/TsEmptyState.svelte';
+
+  function toggleTimesheetExpand(id: string) {
+    expandedTimesheetId = expandedTimesheetId === id ? '' : id;
+  }
 
   type Employee = {
     id: string;
@@ -311,8 +316,23 @@
   });
 </script>
 
-{#if canApprove && settlementOnly}
-  <TimeSettlementCard {apiUrl} {employees} {active} onMessage={onMessage} />
+{#if settlementOnly}
+  <div class="ts-section-intro">
+    <h3>Abschluss & Export</h3>
+    <p class="ts-lead">
+      Monatsabschluss, Zeitkonten und Lohn-CSV. Stundenzettel müssen freigegeben sein.
+    </p>
+  </div>
+  {#if canApprove}
+    <TimeSettlementCard {apiUrl} {employees} {active} onMessage={onMessage} />
+  {/if}
+{:else}
+  <div class="ts-section-intro">
+    <h3>Stundenzettel</h3>
+    <p class="ts-lead">
+      Nach Stempeln neu berechnen, einreichen und freigeben. Zeile anklicken für Tagesdetails (Soll/Ist pro Tag).
+    </p>
+  </div>
 {/if}
 
 {#if canCorrectTime && !settlementOnly}
@@ -404,17 +424,22 @@
   {#if canApprove && !settlementOnly}
     <TimeSettlementCard {apiUrl} {employees} {active} onMessage={onMessage} />
   {/if}
-  <h3 style="margin-top: 1rem;">
-    Stundenzettel{#if !timesheetAllWeeks}
-      ({weekLabelForAnchor(shiftWeekAnchor)}){/if}
-  </h3>
+  <p class="muted" style="margin-top: 0.75rem;">
+    {#if timesheetAllWeeks}
+      Alle Kalenderwochen
+    {:else}
+      {weekLabelForAnchor(shiftWeekAnchor)}
+    {/if}
+    · Filter: {timesheetFilter === 'all' ? 'Alle' : statusLabel(timesheetFilter)}
+  </p>
   {#each timesheets as t}
     <div class="row-card">
       {#if t.evaluation?.days?.length}
         <button
           type="button"
           class="row-card-summary-btn"
-          onclick={() => (expandedTimesheetId = expandedTimesheetId === t.id ? '' : t.id)}
+          onclick={() => toggleTimesheetExpand(t.id)}
+          aria-expanded={expandedTimesheetId === t.id}
         >
           <strong>{t.employee_no} {t.employee_name}</strong>
           <span class="muted">
@@ -457,7 +482,7 @@
         <button
           class="secondary"
           type="button"
-          onclick={() => (expandedTimesheetId = expandedTimesheetId === t.id ? '' : t.id)}
+          onclick={() => toggleTimesheetExpand(t.id)}
         >
           {expandedTimesheetId === t.id ? 'Tagesdetails ausblenden' : 'Tagesdetails'}
         </button>
@@ -465,11 +490,11 @@
           <table class="data-table" style="margin-top: 0.5rem; font-size: 0.9rem;">
             <thead>
               <tr>
-                <th>Tag</th>
-                <th>Modell</th>
-                <th>Soll</th>
-                <th>Ist</th>
-                <th>Saldo</th>
+                <th scope="col">Tag</th>
+                <th scope="col">Modell</th>
+                <th scope="col">Soll</th>
+                <th scope="col">Ist</th>
+                <th scope="col">Saldo</th>
               </tr>
             </thead>
             <tbody>
@@ -506,7 +531,7 @@
       </div>
     </div>
   {:else}
-    <p class="muted">Nach Stempeln: „neu berechnen“, dann einreichen/freigeben.</p>
+    <TsEmptyState message="Keine Stundenzettel für Filter/KW — zuerst „neu berechnen“ oder Filter anpassen." />
   {/each}
   {#if rebuildWarnings.length}
     <div style="margin-top: 0.75rem;">

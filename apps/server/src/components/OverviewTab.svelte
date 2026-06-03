@@ -232,21 +232,20 @@
         <button
           type="button"
           class="stat-card stat-card-btn"
-          onclick={() => onNavigate?.({ tab: 'time', timesheetFilter: 'pending' })}
+          onclick={() =>
+            onNavigate?.({ tab: 'time', timesheetFilter: 'pending', timeSection: 'stundenzettel' })}
         >
           <span class="muted">Stundenzettel offen</span>
           <strong>{dashboard.pending_timesheets}</strong>
         </button>
-        {#if dashboard.draft_timesheets > 0}
-          <button
-            type="button"
-            class="stat-card stat-card-btn"
-            onclick={() => onNavigate?.({ tab: 'time', timesheetFilter: 'draft' })}
-          >
-            <span class="muted">Entwürfe / abgelehnt</span>
-            <strong>{dashboard.draft_timesheets}</strong>
-          </button>
-        {/if}
+        <button
+          type="button"
+          class="stat-card stat-card-btn"
+          onclick={() => onNavigate?.({ tab: 'time', timesheetFilter: 'draft', timeSection: 'stundenzettel' })}
+        >
+          <span class="muted">Entwürfe / abgelehnt</span>
+          <strong>{dashboard.draft_timesheets}</strong>
+        </button>
         <button
           type="button"
           class="stat-card stat-card-btn"
@@ -314,7 +313,8 @@
             type="button"
             class="stat-card stat-card-btn"
             style="border-color: #b8860b;"
-            onclick={() => onNavigate?.({ tab: 'access' })}
+            onclick={() =>
+              onNavigate?.({ tab: 'time', timeSection: 'stundenzettel' })}
           >
             <span class="muted">Zeit ↔ Zutritt</span>
             <strong>{dashboard.time_access_mismatch_count}</strong>
