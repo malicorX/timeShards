@@ -81,6 +81,25 @@ function Wait-TcpPortOpen {
     throw "TCP $HostName`:$Port not accepting connections within ${TimeoutSec}s"
 }
 
+function Get-SmokeAccessEvents {
+    param(
+        [string]$ApiUrl,
+        [hashtable]$AuthHeaders,
+        [string]$Query = "limit=100"
+    )
+    $data = Invoke-RestMethod -Uri "$ApiUrl/api/v1/access/events?$Query" -Headers $AuthHeaders
+    if ($null -eq $data) { return @() }
+    return @($data)
+}
+
+function Get-SmokeWebContent {
+    param(
+        [string]$Uri,
+        [hashtable]$Headers
+    )
+    (Invoke-WebRequest -Uri $Uri -Headers $Headers -UseBasicParsing).Content
+}
+
 function Wait-CountIncreased {
     param(
         [int]$Before,

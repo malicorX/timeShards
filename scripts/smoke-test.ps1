@@ -208,19 +208,12 @@ if ($demoWs.draft_timesheets -lt 1) {
 if ($demoWs.my_pending_absences -lt 1) {
     throw "Expected demo my_pending_absences >= 1"
 }
-$meAccess = (Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/me" -Headers $demoHeaders).Content | ConvertFrom-Json
+$meAccess = Invoke-RestMethod -Uri "$ApiUrl/api/v1/access/me" -Headers $demoHeaders
 $readerCount = @($meAccess.readers).Count
 if ($readerCount -lt 2) {
     throw "Expected >= 2 readers on /access/me for simulate-scan, got $readerCount"
 }
 Write-Host "  access/me readers=$readerCount"
-$ev0002 = @(
-    (Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/events?employee_no=0002&limit=5" -Headers $headers).Content | ConvertFrom-Json
-)
-if ($ev0002.Count -lt 1) {
-    throw "Expected access events for employee_no=0002 filter"
-}
-Write-Host "  access/events employee_no filter OK"
 $mgrLogin = Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/auth/login" `
     -Body (@{ username = "manager"; password = "demo" } | ConvertTo-Json) -ContentType "application/json"
 $mgrWs = Invoke-RestMethod -Uri "$ApiUrl/api/v1/me/work-summary" -Headers @{ Authorization = "Bearer $($mgrLogin.token)" }
@@ -253,7 +246,7 @@ $payYear = (Get-Date).Year
 $payMonth = (Get-Date).Month
 $payrollTmp = Join-Path $env:TEMP "timeshards-smoke-payroll.csv"
 Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/payroll/export?year=$payYear&month=$payMonth&format=csv&aggregate=employee" `
-    -Headers $headers -OutFile $payrollTmp | Out-Null
+    -Headers $headers -OutFile $payrollTmp -UseBasicParsing | Out-Null
 $payrollBytes = [System.IO.File]::ReadAllBytes($payrollTmp)
 if ($payrollBytes.Length -lt 3 -or $payrollBytes[0] -ne 0xEF -or $payrollBytes[1] -ne 0xBB -or $payrollBytes[2] -ne 0xBF) {
     throw "Payroll CSV missing UTF-8 BOM (Excel-friendly export)"
@@ -288,7 +281,7 @@ Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/absences/$($smokeAbs.id)/app
 Write-Host "  created + approved in-month absence $($smokeAbs.id)"
 $absTmp = Join-Path $env:TEMP "timeshards-smoke-absences.csv"
 Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/absences/export?year=$payYear&month=$payMonth&format=csv" `
-    -Headers $headers -OutFile $absTmp | Out-Null
+    -Headers $headers -OutFile $absTmp -UseBasicParsing | Out-Null
 $absText = [System.IO.File]::ReadAllText($absTmp)
 if ($absText -notmatch 'personal_nr;name;jahr;monat;typ') {
     throw "Absences export CSV missing expected header"
@@ -366,7 +359,7 @@ if ($demoRebuild.updated -gt 1) {
 Write-Host "  demo rebuild updated=$($demoRebuild.updated)"
 
 Write-Host "Demo timesheet export (scoped to self)..."
-$demoCsv = (Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/timesheets/export?format=csv&status=draft" -Headers $demoHeaders).Content
+$demoCsv = Get-SmokeWebContent -Uri "$ApiUrl/api/v1/reports/timesheets/export?format=csv&status=draft" -Headers $demoHeaders
 if ($demoCsv -match '(?m)^0001;' -or $demoCsv -match '(?m)^0003;') {
     throw "Demo export must not include other employees (0001/0003)"
 }
@@ -377,7 +370,7 @@ Write-Host "  draft export scoped OK"
 
 Write-Host "Demo access export (forbidden)..."
 try {
-    Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/access/export?format=csv" -Headers $demoHeaders | Out-Null
+    Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/access/export?format=csv" -Headers $demoHeaders -UseBasicParsing | Out-Null
     throw "Expected demo access export to be forbidden"
 } catch {
     $status = $null
@@ -390,20 +383,9 @@ Write-Host "  demo cannot export access log (403)"
 
 Trace-SmokeStep "demo-access-scan"
 Write-Host "Demo badge simulate-scan (in)..."
-function Get-AccessEvents {
-    param([hashtable]$AuthHeaders)
-    $content = (Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/events?limit=100" -Headers $AuthHeaders).Content
-    if ([string]::IsNullOrWhiteSpace($content) -or $content.Trim() -eq '[]') {
-        return @()
-    }
-    $data = $content | ConvertFrom-Json
-    if ($null -eq $data) { return @() }
-    return @($data)
-}
-
 function Get-DemoAccessEventCount {
     param([hashtable]$AuthHeaders)
-    $events = Get-AccessEvents -AuthHeaders $AuthHeaders
+    $events = Get-SmokeAccessEvents -ApiUrl $ApiUrl -AuthHeaders $AuthHeaders
     return @($events | Where-Object { $_.employee_no -eq "0002" }).Count
 }
 $eventsBefore = Get-DemoAccessEventCount -AuthHeaders $headers
@@ -418,6 +400,11 @@ $eventsAfter = Wait-CountIncreased -Before $eventsBefore -GetCount { Get-DemoAcc
 if ($eventsAfter -gt $eventsBefore + 1) {
     Write-Host "  note: $($eventsAfter - $eventsBefore) new demo events (expected >= 1)"
 }
+$ev0002 = @(Get-SmokeAccessEvents -ApiUrl $ApiUrl -AuthHeaders $headers -Query "employee_no=0002&limit=5")
+if ($ev0002.Count -lt 1) {
+    throw "Expected access events for employee_no=0002 filter"
+}
+Write-Host "  access/events employee_no filter OK"
 
 Write-Host "Building occupancy (after entry)..."
 $dashAfterIn = Invoke-RestMethod -Uri "$ApiUrl/api/v1/admin/dashboard" -Headers $headers
@@ -459,7 +446,7 @@ Write-Host "  decision=$($mgrScan.decision) reason=$($mgrScan.reason_code)"
 if ($mgrScan.decision -notin @("grant", "allow")) {
     throw "Expected manager simulate-scan grant, got $($mgrScan.decision)"
 }
-$mgrAccessCsv = (Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/access/export?format=csv&limit=50" -Headers $mgrHeaders).Content
+$mgrAccessCsv = Get-SmokeWebContent -Uri "$ApiUrl/api/v1/reports/access/export?format=csv&limit=50" -Headers $mgrHeaders
 if ($mgrAccessCsv -notmatch '(?m)^0002;' -and $mgrAccessCsv -notmatch '(?m);0002;') {
     throw "Manager access export should include demo employee 0002 after scans"
 }
@@ -483,9 +470,7 @@ $hwLatest = $null
 $sinceQs = [uri]::EscapeDataString($hwSince)
 $hwPollMax = if ($env:GITHUB_ACTIONS -eq 'true') { 50 } else { 25 }
 for ($i = 0; $i -lt $hwPollMax; $i++) {
-    $sinceEv = @(
-        (Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/events?limit=5&since=$sinceQs" -Headers $headers).Content | ConvertFrom-Json
-    )
+    $sinceEv = @(Get-SmokeAccessEvents -ApiUrl $ApiUrl -AuthHeaders $headers -Query "limit=5&since=$sinceQs")
     $hwLatest = $sinceEv | Where-Object { $_.employee_no -eq "0002" } | Select-Object -First 1
     if ($hwLatest) { break }
     Start-Sleep -Milliseconds (Get-SmokePollDelayMs)

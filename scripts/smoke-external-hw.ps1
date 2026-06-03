@@ -104,20 +104,9 @@ Write-Host "  hardware-present OK ($($ev[0].decision))"
 
 Trace-SmokeStep "tcp-ingest"
 Write-Host "TCP credential ingest..."
-function Get-AccessEvents {
-    param([hashtable]$AuthHeaders)
-    $content = (Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/events?limit=100" -Headers $AuthHeaders).Content
-    if ([string]::IsNullOrWhiteSpace($content) -or $content.Trim() -eq '[]') {
-        return @()
-    }
-    $data = $content | ConvertFrom-Json
-    if ($null -eq $data) { return @() }
-    return @($data)
-}
-
 function Get-AccessEventCount {
     param([hashtable]$AuthHeaders)
-    return (Get-AccessEvents -AuthHeaders $AuthHeaders).Count
+    return (Get-SmokeAccessEvents -ApiUrl $ApiUrl -AuthHeaders $AuthHeaders).Count
 }
 $tcpBefore = Get-AccessEventCount -AuthHeaders $headers
 $line = '{"reader_id":"sim.reader.main","credential_uid":"DEMO-0003"}'
@@ -133,7 +122,7 @@ try {
     $tcp.Close()
 }
 $tcpAfter = Wait-CountIncreased -Before $tcpBefore -GetCount { Get-AccessEventCount -AuthHeaders $headers } -Label 'TCP JSON ingest'
-$tcpEvents = Get-AccessEvents -AuthHeaders $headers
+$tcpEvents = Get-SmokeAccessEvents -ApiUrl $ApiUrl -AuthHeaders $headers
 if ($tcpEvents[0].decision -notin @("grant", "allow")) {
     throw "Expected grant on TCP ingest path, got $($tcpEvents[0].decision)"
 }
