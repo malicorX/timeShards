@@ -26,6 +26,7 @@
     "foundation:health": "powershell -ExecutionPolicy Bypass -File scripts/foundation-health.ps1",
     "verify:all": "powershell -ExecutionPolicy Bypass -File scripts/verify-all.ps1",
     "verify:pilot": "powershell -ExecutionPolicy Bypass -File scripts/verify-pilot.ps1",
+    "pilot:ready": "powershell -ExecutionPolicy Bypass -File scripts/pilot-ready.ps1",
     "verify:doors": "powershell -ExecutionPolicy Bypass -File scripts/verify-door-readers.ps1"
   }
 }

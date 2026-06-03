@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-06-03 · **Shipping line:** v0.2.x (time foundation + access simulation + payroll CSVs)
 
-**Implementation status (2026-06-03):** M1–M5 code paths are in `main`. Open items are **pilot/ops** (site hardware bridge, DATEV column feedback), not blocked on new features. See [STATUS.md](./STATUS.md).
+**Implementation status (2026-06-03):** M1–M5 **code complete** on `main` (exit: `npm run pilot:ready`). Remaining work is **pilot/ops** on site (hardware bridge, payroll CSV feedback), not new app features unless you start **M6**. See [STATUS.md](./STATUS.md).
 
 This is the **canonical plan** for what we build next. It reflects the **monolithic Axum API + two Tauri apps** in the repo today—not the optional micro-kernel experiment in `crates/timeshards-kernel`.
 
