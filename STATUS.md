@@ -14,14 +14,18 @@ Germany-first **time tracking + access control** (Tauri + Axum + SQLite):
 - **Perioden UI** (tabs, Jahresübersicht, Feiertage, Umschaltplan), shared UI tokens, pick-list Personal/Zutritt
 - Hardware bridge helpers: `npm run verify:doors`, [HARDWARE.md](docs/HARDWARE.md) pilot checklist
 
-## Verify locally
+## Ship / verify (roadmap M1–M5 exit)
 
 ```powershell
-npm run check:all
-npm run verify:all          # check + foundation tests
-npm run smoke:api           # full API smoke + door mapping
-npm run smoke:production    # demo off, block default passwords
+npm run pilot:ready         # gate: check + DB tests + smokes + production mode
+
+$env:TIMESHARDS_ADMIN_PASSWORD = "YourSecret"
+npm run start:pilot           # desktop pilot (demo off)
+# npm run api:pilot           # headless API only
+# npm run api:hw-pilot        # + external HW TCP; then npm run hw:pilot
 ```
+
+Installers (optional): `.\scripts\build.ps1` · Cutover: [docs/PILOT.md](docs/PILOT.md)
 
 ## Docs
 
