@@ -9,6 +9,7 @@ pub mod settlement_periods;
 pub mod shift_templates;
 pub mod time;
 pub mod time_accounts;
+pub mod holiday_calendars;
 pub mod work_calendars;
 pub mod work_rotation;
 
@@ -26,6 +27,7 @@ pub fn api_router(state: Arc<AppState>) -> Router {
         .merge(time_accounts::routes())
         .merge(shift_templates::routes())
         .merge(work_calendars::routes())
+        .merge(holiday_calendars::routes())
         .merge(work_rotation::routes())
         .merge(settlement_periods::routes())
         .merge(absence::routes())

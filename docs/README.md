@@ -4,6 +4,7 @@
 |----------|-------------|
 | [GETTING_STARTED.md](./GETTING_STARTED.md) | Install, run, first login, UI tour, LAN setup, troubleshooting |
 | [API.md](./API.md) | REST API reference |
+| [UI_UX_GUIDE.md](./UI_UX_GUIDE.md) | UI/UX rules for server + client (design tokens, patterns, refactor phases) |
 | [TIME_MODEL.md](./TIME_MODEL.md) | Work calendars, Tagesmodelle, evaluation (Soll/Ist) |
 | [FOUNDATION.md](./FOUNDATION.md) | What is implemented vs planned for the time base |
 | [FOUNDATION_CHECKLIST.md](./FOUNDATION_CHECKLIST.md) | Admin go-live checklist (Kalender, Soll, repair) |
@@ -18,10 +19,9 @@
 | [DATEV.md](./DATEV.md) | DATEV Phase 2 — prerequisites and mapping draft |
 | [PHASE2.md](./PHASE2.md) | Post-v1 tracks (DATEV, hardware, …) |
 | [../README.md](../README.md) | Project overview |
-| [../ROADMAP.md](../ROADMAP.md) | Product direction (high level) |
-| [../ROADMAP_DETAILS.md](../ROADMAP_DETAILS.md) | Detailed vision and modules |
-
-PrimeWeb reference PDFs (`docs/pWA_*.pdf`, `pWM_*.pdf`, `pWT_*.pdf`) are **not in git** — keep them locally for design reference only.
+| [../ROADMAP.md](../ROADMAP.md) | **Active** product milestones (M1–M6) |
+| [../ROADMAP_DETAILS.md](../ROADMAP_DETAILS.md) | Vision & feature catalog (with status) |
+| [UI_UX_GUIDE.md](./UI_UX_GUIDE.md) | UI/UX rules for server + client |
 
 ## Helper scripts (Windows)
 

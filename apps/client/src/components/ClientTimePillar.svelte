@@ -2,6 +2,8 @@
   import { api, downloadFile } from '../lib/api';
   import { formatMinutes } from '../lib/formatMinutes';
   import { statusLabel } from '../lib/statusLabels';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
+  import TsCard from '@timeshards/shared/ui/TsCard.svelte';
   import {
     anchorFromPeriodStart,
     weekRangeContaining,
@@ -274,7 +276,10 @@
   });
 </script>
 
-<h2>Zeiterfassung</h2>
+<TsPageHeader
+  title="Zeiterfassung"
+  lead="Stempeln, Kalenderwoche mit Soll/Ist und Stundenzettel. Sollzeit kommt aus Ihrer Jahresperiode (HR pflegt Perioden im Server)."
+/>
 {#if workSummary && ((workSummary.pending_timesheets ?? 0) + (workSummary.pending_absences ?? 0) + (workSummary.draft_timesheets ?? 0) + ownPendingAbsences) > 0}
   <p class="muted" style="margin-bottom: 0.75rem;">
     {#if canApprove && ((workSummary.pending_timesheets ?? 0) + (workSummary.pending_absences ?? 0)) > 0}
@@ -322,17 +327,22 @@
   </p>
 {/if}
 {#if timeStatus}
-  <div class="card">
-    <p>
-      {#if timeStatus.is_on_break}
-        <span class="muted">Pause aktiv</span>
-      {:else if timeStatus.is_clocked_in}
-        <span class="success">Eingestempelt</span>
-      {:else}
-        <span class="muted">Ausgestempelt</span>
-      {/if}
-    </p>
-    <div class="btn-row" style="margin-top: 0.75rem;">
+  <TsCard title="Stempeluhr" lead="Aktueller Status und Hauptaktionen">
+    <div class="ts-punch-bar">
+      <span
+        class="status-pill"
+        class:on={timeStatus.is_clocked_in && !timeStatus.is_on_break}
+        class:break={timeStatus.is_on_break}
+        class:off={!timeStatus.is_clocked_in && !timeStatus.is_on_break}
+      >
+        {#if timeStatus.is_on_break}
+          Pause
+        {:else if timeStatus.is_clocked_in}
+          Eingestempelt
+        {:else}
+          Ausgestempelt
+        {/if}
+      </span>
       {#if !timeStatus.is_clocked_in}
         <button type="button" onclick={clockIn}>Kommen</button>
       {:else if timeStatus.is_on_break}
@@ -343,29 +353,42 @@
         <button type="button" onclick={clockOut}>Gehen</button>
       {/if}
     </div>
-  </div>
-{/if}
-{#if workSummary?.work_calendar_assigned === false}
-  <p class="error" style="margin-bottom: 0.75rem; font-size: 0.9rem;">
-    Kein Arbeitskalender zugewiesen — Sollzeit wird nicht berechnet. Bitte HR/Admin kontaktieren.
-  </p>
-{:else if workSummary?.current_week && workSummary.current_week.expected_minutes > 0}
-  <p class="muted" style="margin-bottom: 0.75rem; font-size: 0.9rem;">
-    Kalenderwoche
-    {#if workSummary.current_week.work_calendar_name}
-      ({workSummary.current_week.work_calendar_name})
+    {#if workSummary?.work_calendar_assigned === false}
+      <p class="error" style="margin-top: 0.75rem; font-size: 0.9rem;">
+        Kein Arbeitskalender — Sollzeit fehlt. Bitte HR kontaktieren.
+      </p>
+    {:else if workSummary?.current_week && workSummary.current_week.expected_minutes > 0}
+      <div class="ts-status-hero" style="margin-top: 1rem;">
+        <div class="stat">
+          <span class="label">Ist (KW)</span>
+          <span class="value">{formatMinutes(workSummary.current_week.worked_minutes)}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Soll</span>
+          <span class="value">{formatMinutes(workSummary.current_week.expected_minutes)}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Saldo</span>
+          <span
+            class="value"
+            class:warn={workSummary.current_week.balance_minutes < 0}
+            class:ok={workSummary.current_week.balance_minutes >= 0}
+          >
+            {formatMinutes(workSummary.current_week.balance_minutes)}
+          </span>
+        </div>
+        <div class="stat">
+          <span class="label">Stundenzettel</span>
+          <span class="value">{statusLabel(workSummary.current_week.status)}</span>
+        </div>
+      </div>
+      {#if workSummary.current_week.work_calendar_name}
+        <p class="muted fine-print">Kalender: {workSummary.current_week.work_calendar_name}</p>
+      {/if}
     {/if}
-    — Ist {formatMinutes(workSummary.current_week.worked_minutes)} · Soll{' '}
-    {formatMinutes(workSummary.current_week.expected_minutes)} · Saldo{' '}
-    <strong>{formatMinutes(workSummary.current_week.balance_minutes)}</strong>
-    <span class="muted"> · {statusLabel(workSummary.current_week.status)}</span>
-  </p>
-  <p class="muted" style="margin: -0.5rem 0 0.75rem; font-size: 0.8rem;">
-    Nach Gehen/Pause-Ende wird der Stundenzettel automatisch neu berechnet.
-  </p>
+  </TsCard>
 {/if}
-<div class="card" style="margin-top: 1rem;">
-  <h3>Stundenzettel</h3>
+<TsCard title="Stundenzettel" lead="Filter, Tagesdetails und Einreichen">
   <div class="btn-row" style="margin-bottom: 0.5rem;">
     <select bind:value={timesheetFilter} onchange={() => refresh()}>
       <option value="all">Alle Status</option>
@@ -434,7 +457,9 @@
     </button>
   {/if}
   {#if timesheets.length === 0}
-    <p class="muted">Keine Stundenzettel in dieser Ansicht</p>
+    <div class="ts-empty">
+      <p>Keine Stundenzettel in dieser Ansicht — Filter oder Kalenderwoche prüfen.</p>
+    </div>
   {/if}
   {#if timeEvents.length > 0 && (timesheets.length === 0 || timesheets.some((t) => (t.expected_minutes ?? 0) === 0 && (t.status === 'draft' || t.status === 'rejected')))}
     <button class="secondary" type="button" style="margin-top: 0.5rem;" onclick={rebuildMyTimesheets}>
@@ -449,7 +474,7 @@
       </ul>
     </div>
   {/if}
-</div>
+</TsCard>
 {#if myShiftTemplates.length > 0}
   <div class="card" style="margin-top: 1rem;">
     <h3>Wochenvorlagen</h3>

@@ -43,11 +43,16 @@ CI: `.github/workflows/ci.yml` runs `cargo check` and `svelte-check` on push/PR.
 ## Conventions
 
 - PowerShell: use `;` not `&&`
-- Minimal diffs; match existing German UI strings
+- Minimal diffs; match existing German UI strings; UI work follows `docs/UI_UX_GUIDE.md` (shared tokens, informative + clickable patterns)
 - No commits unless the user asks
 - Access: simulated badges only (`DEMO-*` UIDs); anti-passback via in/out readers; `TIMESHARDS_HW_ADAPTER=sim|external`; REST `simulate-scan`, channel `hardware-present` (poll `GET /access/events?since=`), external TCP lines (credential + door + reader_offline); see `docs/HARDWARE.md`
 - New employees/users often get Büro zone allow rule via `grant_default_zone_access`; existing MA: `POST /admin/employees/{id}/grant-zone-access`
 - Work calendar (Sollzeit): `grant_work_calendar` on `POST /admin/employees` (default); `POST /admin/employees/{id}/grant-work-calendar`; bulk `POST /admin/foundation-fix`; week bounds `GET /time/calendar-week`; see `docs/FOUNDATION.md`
+
+## Planning
+
+- Active milestones: `ROADMAP.md` (not the micro-kernel appendix unless explicitly requested)
+- UI work: `docs/UI_UX_GUIDE.md`
 
 ## Key domains
 

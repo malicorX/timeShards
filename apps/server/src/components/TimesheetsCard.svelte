@@ -410,19 +410,40 @@
   </h3>
   {#each timesheets as t}
     <div class="row-card">
-      <p>
-        <strong>{t.employee_no} {t.employee_name}</strong>
-        <span class="muted">
-          ({calendarWeekLabel(t.period_start)}
-          {formatPeriodRange(t.period_start, t.period_end)})
-        </span>
-        — Ist {formatMinutes(t.worked_minutes)}
-        {#if t.expected_minutes != null && t.expected_minutes > 0}
-          · Soll {formatMinutes(t.expected_minutes)}
-          · Saldo {formatMinutes(t.balance_minutes ?? t.worked_minutes - t.expected_minutes)}
-        {/if}
-        (ÜS {formatMinutes(t.overtime_minutes)}) — <em>{statusLabel(t.status)}</em>
-      </p>
+      {#if t.evaluation?.days?.length}
+        <button
+          type="button"
+          class="row-card-summary-btn"
+          onclick={() => (expandedTimesheetId = expandedTimesheetId === t.id ? '' : t.id)}
+        >
+          <strong>{t.employee_no} {t.employee_name}</strong>
+          <span class="muted">
+            ({calendarWeekLabel(t.period_start)}
+            {formatPeriodRange(t.period_start, t.period_end)})
+          </span>
+          — Ist {formatMinutes(t.worked_minutes)}
+          {#if t.expected_minutes != null && t.expected_minutes > 0}
+            · Soll {formatMinutes(t.expected_minutes)}
+            · Saldo {formatMinutes(t.balance_minutes ?? t.worked_minutes - t.expected_minutes)}
+          {/if}
+          (ÜS {formatMinutes(t.overtime_minutes)}) — <em>{statusLabel(t.status)}</em>
+          <span class="muted"> — Klicken für Tagesdetails</span>
+        </button>
+      {:else}
+        <p>
+          <strong>{t.employee_no} {t.employee_name}</strong>
+          <span class="muted">
+            ({calendarWeekLabel(t.period_start)}
+            {formatPeriodRange(t.period_start, t.period_end)})
+          </span>
+          — Ist {formatMinutes(t.worked_minutes)}
+          {#if t.expected_minutes != null && t.expected_minutes > 0}
+            · Soll {formatMinutes(t.expected_minutes)}
+            · Saldo {formatMinutes(t.balance_minutes ?? t.worked_minutes - t.expected_minutes)}
+          {/if}
+          (ÜS {formatMinutes(t.overtime_minutes)}) — <em>{statusLabel(t.status)}</em>
+        </p>
+      {/if}
       {#if t.evaluation?.work_calendar_name}
         <p class="muted">
           Kalender: {t.evaluation.work_calendar_name}

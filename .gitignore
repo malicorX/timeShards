@@ -20,7 +20,7 @@ apps/*/src-tauri/gen/
 *.db-*
 .data/
 
-# PrimeWeb reference PDFs (local only — copyright / size)
+# Local reference PDFs in docs/ (not in git — copyright / size)
 docs/p*.pdf
 
 # Agent brainstorm sessions (local)

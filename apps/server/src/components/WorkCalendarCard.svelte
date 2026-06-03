@@ -11,6 +11,14 @@
   };
 
   type UiMessage = { type: 'error' | 'success'; text: string };
+  type PeriodPanel = 'jahres' | 'tages' | 'feiertage' | 'umschalt' | 'zuordnungen';
+  type RotationPlan = {
+    id: string;
+    name: string;
+    cycle_days: number;
+    anchor_date: string;
+    slots: { slot_index: number; workday_model_id: string; model_name: string }[];
+  };
 
   let {
     apiUrl,
@@ -41,17 +49,45 @@
     worked_rounding_minutes?: number | null;
   };
 
+  let panel = $state<PeriodPanel>('jahres');
   let workdayModels = $state<{ id: string; name: string; config: WorkdayModelConfig }[]>([]);
   let editModelId = $state('wm-std-8h');
+  let editModelName = $state('');
   let editExpectedMinutes = $state(480);
   let editLabel = $state('');
   let editFlexEarliest = $state('06:00');
   let editFlexLatest = $state('20:00');
+  let newModelName = $state('');
   let savingModel = $state(false);
-  let workCalendars = $state<{ id: string; name: string }[]>([]);
-  let rotationPlans = $state<
-    { id: string; name: string; cycle_days: number; anchor_date: string }[]
+  let creatingModel = $state(false);
+
+  let workCalendars = $state<
+    {
+      id: string;
+      name: string;
+      holiday_calendar_id?: string | null;
+      rotation_plan_id?: string | null;
+    }[]
   >([]);
+  let holidayCalendars = $state<
+    { id: string; name: string; region_code?: string | null; year_from: number; year_to: number }[]
+  >([]);
+  let holidayDays = $state<
+    {
+      date: string;
+      day_kind: string;
+      name?: string | null;
+      model_name?: string | null;
+    }[]
+  >([]);
+  let linkedHolidayCalendarId = $state('');
+  let holidayViewYear = $state(new Date().getFullYear());
+  let newCalendarName = $state('');
+  let creatingCalendar = $state(false);
+  let rotationPlans = $state<RotationPlan[]>([]);
+  let selectedRotationPlanId = $state('');
+  let rotationSlotEdits = $state<{ slot_index: number; workday_model_id: string }[]>([]);
+  let savingRotation = $state(false);
   let workAssignments = $state<
     {
       id: string;
@@ -68,6 +104,7 @@
     { date: string; workday_model_id: string; model_name: string }[]
   >([]);
   let selectedWorkCalendarId = $state('wc-default-standard');
+  let selectedDayDate = $state('');
   let calendarGenYear = $state(new Date().getFullYear());
   let calendarRotationPlanId = $state('');
   let workAssignmentEmployeeFilter = $state('');
@@ -77,10 +114,7 @@
     valid_from: `${new Date().getFullYear()}-01-01`,
     part_time_percent: 100,
   });
-  let calendarDayOverride = $state({
-    date: '',
-    workday_model_id: 'wm-std-8h',
-  });
+  let dayEditModelId = $state('wm-std-8h');
 
   function toYmd(d: Date): string {
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -91,19 +125,115 @@
     onMessage?.({ type, text });
   }
 
+  function syncLinkedHolidayFromCalendar() {
+    const cal = workCalendars.find((c) => c.id === selectedWorkCalendarId);
+    linkedHolidayCalendarId = cal?.holiday_calendar_id ?? '';
+    calendarRotationPlanId = cal?.rotation_plan_id ?? '';
+  }
+
+  function syncRotationSlotEdits() {
+    const plan = rotationPlans.find((p) => p.id === selectedRotationPlanId);
+    if (!plan) {
+      rotationSlotEdits = [];
+      return;
+    }
+    const byIdx = new Map(plan.slots.map((s) => [s.slot_index, s.workday_model_id]));
+    rotationSlotEdits = Array.from({ length: plan.cycle_days }, (_, i) => ({
+      slot_index: i,
+      workday_model_id: byIdx.get(i) ?? workdayModels[0]?.id ?? 'wm-std-8h',
+    }));
+  }
+
+  async function loadHolidayDays() {
+    if (!linkedHolidayCalendarId) {
+      holidayDays = [];
+      return;
+    }
+    const from = `${holidayViewYear}-01-01`;
+    const to = `${holidayViewYear}-12-31`;
+    holidayDays = await api<typeof holidayDays>(
+      apiUrl,
+      `/api/v1/time/holiday-calendars/${linkedHolidayCalendarId}/days?from=${from}&to=${to}`,
+    ).catch(() => []);
+  }
+
+  async function saveLinkedHoliday() {
+    if (!selectedWorkCalendarId) {
+      notify('error', 'Jahresperiode wählen (Tab Jahresperioden)');
+      return;
+    }
+    try {
+      await api(apiUrl, `/api/v1/time/work-calendars/${selectedWorkCalendarId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          holiday_calendar_id: linkedHolidayCalendarId || null,
+        }),
+      });
+      await refresh();
+      onWeekChange?.();
+      notify('success', 'Feiertagskalender verknüpft — Stundenzettel werden neu berechnet');
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function saveRotationSlots() {
+    if (!selectedRotationPlanId) {
+      notify('error', 'Umschaltplan wählen');
+      return;
+    }
+    savingRotation = true;
+    try {
+      await api(apiUrl, `/api/v1/time/work-rotation-plans/${selectedRotationPlanId}/slots`, {
+        method: 'PUT',
+        body: JSON.stringify({ slots: rotationSlotEdits }),
+      });
+      await refresh();
+      onWeekChange?.();
+      notify('success', 'Umschaltplan gespeichert');
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : String(e));
+    } finally {
+      savingRotation = false;
+    }
+  }
+
   function syncEditFromModel(id: string) {
     const m = workdayModels.find((x) => x.id === id);
     if (!m) return;
+    editModelName = m.name;
     editExpectedMinutes = m.config.expected_minutes ?? 0;
     editLabel = m.config.label ?? '';
     editFlexEarliest = m.config.flex_band?.earliest_start ?? '06:00';
     editFlexLatest = m.config.flex_band?.latest_end ?? '20:00';
   }
 
+  function selectModel(id: string) {
+    editModelId = id;
+    syncEditFromModel(id);
+    panel = 'tages';
+  }
+
+  function selectCalendarDay(d: { date: string; workday_model_id: string }) {
+    selectedDayDate = d.date;
+    dayEditModelId = d.workday_model_id;
+    calendarDayOverride = { date: d.date, workday_model_id: d.workday_model_id };
+  }
+
+  let calendarDayOverride = $state({
+    date: '',
+    workday_model_id: 'wm-std-8h',
+  });
+
   async function saveWorkdayModel() {
     const m = workdayModels.find((x) => x.id === editModelId);
     if (!m) {
-      notify('error', 'Tagesmodell wählen');
+      notify('error', 'Tagesperiode wählen');
+      return;
+    }
+    const name = editModelName.trim();
+    if (!name) {
+      notify('error', 'Name erforderlich');
       return;
     }
     savingModel = true;
@@ -119,15 +249,73 @@
       };
       await api(apiUrl, `/api/v1/time/workday-models/${editModelId}`, {
         method: 'PUT',
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({ name, config }),
       });
       await refresh();
       onWeekChange?.();
-      notify('success', 'Tagesmodell gespeichert — betroffene Stundenzettel werden neu berechnet');
+      notify('success', 'Tagesperiode gespeichert — betroffene Stundenzettel werden neu berechnet');
     } catch (e) {
       notify('error', e instanceof Error ? e.message : String(e));
     } finally {
       savingModel = false;
+    }
+  }
+
+  async function createWorkdayModel() {
+    const name = newModelName.trim();
+    if (!name) {
+      notify('error', 'Name für neue Tagesperiode eingeben');
+      return;
+    }
+    creatingModel = true;
+    try {
+      const created = await api<{ id: string; name: string; config: WorkdayModelConfig }>(
+        apiUrl,
+        '/api/v1/time/workday-models',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            name,
+            config: {
+              expected_minutes: 480,
+              label: null,
+              flex_band: { earliest_start: '06:00', latest_end: '20:00' },
+            },
+          }),
+        },
+      );
+      newModelName = '';
+      await refresh();
+      selectModel(created.id);
+      notify('success', `Tagesperiode „${created.name}“ angelegt`);
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : String(e));
+    } finally {
+      creatingModel = false;
+    }
+  }
+
+  async function createWorkCalendar() {
+    const name = newCalendarName.trim();
+    if (!name) {
+      notify('error', 'Name für Jahresperiode eingeben');
+      return;
+    }
+    creatingCalendar = true;
+    try {
+      const created = await api<{ id: string; name: string }>(apiUrl, '/api/v1/time/work-calendars', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      });
+      newCalendarName = '';
+      await refresh();
+      selectedWorkCalendarId = created.id;
+      panel = 'jahres';
+      notify('success', `Jahresperiode „${created.name}“ angelegt — Jahr befüllen`);
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : String(e));
+    } finally {
+      creatingCalendar = false;
     }
   }
 
@@ -137,6 +325,9 @@
         editModelId = workdayModels[0].id;
       }
       syncEditFromModel(editModelId);
+      if (!workdayModels.some((m) => m.id === dayEditModelId)) {
+        dayEditModelId = workdayModels[0].id;
+      }
     }
   });
 
@@ -152,6 +343,16 @@
       apiUrl,
       `/api/v1/time/work-calendars/${selectedWorkCalendarId}/days?from=${from}&to=${to}`,
     ).catch(() => []);
+    if (
+      selectedDayDate &&
+      !workCalendarDays.some((d) => d.date === selectedDayDate)
+    ) {
+      selectedDayDate = workCalendarDays[0]?.date ?? '';
+    }
+    if (!selectedDayDate && workCalendarDays[0]) {
+      selectedDayDate = workCalendarDays[0].date;
+      dayEditModelId = workCalendarDays[0].workday_model_id;
+    }
   }
 
   export async function refresh() {
@@ -163,13 +364,23 @@
       apiUrl,
       '/api/v1/time/work-calendars',
     ).catch(() => []);
-    rotationPlans = await api<typeof rotationPlans>(
+    holidayCalendars = await api<typeof holidayCalendars>(
+      apiUrl,
+      '/api/v1/time/holiday-calendars',
+    ).catch(() => []);
+    rotationPlans = await api<RotationPlan[]>(
       apiUrl,
       '/api/v1/time/work-rotation-plans',
     ).catch(() => []);
     if (workCalendars.length && !workCalendars.some((c) => c.id === selectedWorkCalendarId)) {
       selectedWorkCalendarId = workCalendars[0].id;
     }
+    syncLinkedHolidayFromCalendar();
+    if (rotationPlans.length && !rotationPlans.some((p) => p.id === selectedRotationPlanId)) {
+      selectedRotationPlanId = rotationPlans[0].id;
+    }
+    syncRotationSlotEdits();
+    if (panel === 'feiertage') await loadHolidayDays();
     const assignParams = new URLSearchParams();
     if (workAssignmentEmployeeFilter) {
       assignParams.set('employee_id', workAssignmentEmployeeFilter);
@@ -216,7 +427,7 @@
 
   async function generateWorkCalendarYear() {
     if (!selectedWorkCalendarId) {
-      notify('error', 'Arbeitskalender wählen');
+      notify('error', 'Jahresperiode wählen');
       return;
     }
     try {
@@ -231,7 +442,7 @@
 
   async function generateWorkCalendarTwoYears() {
     if (!selectedWorkCalendarId) {
-      notify('error', 'Arbeitskalender wählen');
+      notify('error', 'Jahresperiode wählen');
       return;
     }
     try {
@@ -246,23 +457,23 @@
     }
   }
 
-  async function setCalendarDay() {
-    if (!selectedWorkCalendarId || !calendarDayOverride.date) {
-      notify('error', 'Kalender und Datum wählen');
+  async function saveSelectedDay() {
+    if (!selectedWorkCalendarId || !selectedDayDate) {
+      notify('error', 'Tag und Jahresperiode wählen');
       return;
     }
     try {
       await api(
         apiUrl,
-        `/api/v1/time/work-calendars/${selectedWorkCalendarId}/days/${calendarDayOverride.date}`,
+        `/api/v1/time/work-calendars/${selectedWorkCalendarId}/days/${selectedDayDate}`,
         {
           method: 'PUT',
-          body: JSON.stringify({ workday_model_id: calendarDayOverride.workday_model_id }),
+          body: JSON.stringify({ workday_model_id: dayEditModelId }),
         },
       );
       await refreshWorkCalendarWeekDays();
       onWeekChange?.();
-      notify('success', `Kalendertag ${calendarDayOverride.date} gespeichert`);
+      notify('success', `Tag ${selectedDayDate} gespeichert`);
     } catch (e) {
       notify('error', e instanceof Error ? e.message : String(e));
     }
@@ -280,7 +491,7 @@
       });
       await refresh();
       onWeekChange?.();
-      notify('success', 'Kalender-Zuordnung gespeichert');
+      notify('success', 'Zuordnung gespeichert');
     } catch (e) {
       notify('error', e instanceof Error ? e.message : String(e));
     }
@@ -288,7 +499,7 @@
 
   async function setCalendarRotation() {
     if (!selectedWorkCalendarId) {
-      notify('error', 'Arbeitskalender wählen');
+      notify('error', 'Jahresperiode wählen');
       return;
     }
     try {
@@ -301,8 +512,8 @@
       notify(
         'success',
         calendarRotationPlanId
-          ? 'Umschaltplan am Kalender aktiv'
-          : 'Umschaltplan vom Kalender entfernt',
+          ? 'Umschaltplan aktiv'
+          : 'Umschaltplan entfernt',
       );
       await refresh();
       onWeekChange?.();
@@ -313,7 +524,7 @@
 
   async function copyWorkCalendarWeek() {
     if (!selectedWorkCalendarId) {
-      notify('error', 'Arbeitskalender wählen');
+      notify('error', 'Jahresperiode wählen');
       return;
     }
     const { days } = weekRangeContaining(shiftWeekAnchor);
@@ -340,146 +551,419 @@
   }
 
   const activeEmployees = $derived(employees.filter((e) => e.active !== false));
+  const selectedDay = $derived(
+    workCalendarDays.find((d) => d.date === selectedDayDate) ?? null,
+  );
 </script>
 
-<div class="card" style="margin-top: 1rem;">
-  <h3>Arbeitskalender & Tagesmodelle</h3>
-  <p class="muted" style="margin-bottom: 0.75rem;">
-    Sollzeit und Feiertage kommen aus dem Arbeitskalender (PrimeWeb-Tages-/Jahresperiode).
-    Schichtvorlagen unten erzeugen nur geplante Schichten.
-  </p>
-  <div class="btn-row">
-    <button class="secondary" type="button" onclick={() => shiftWeek(-1)}>← KW</button>
-    <span class="muted">{weekLabelForAnchor(shiftWeekAnchor)}</span>
-    <button class="secondary" type="button" onclick={() => shiftWeek(1)}>KW →</button>
-    <button class="secondary" type="button" onclick={goToThisWeek}>Diese Woche</button>
-  </div>
-  <div class="grid-form" style="margin-top: 0.75rem;">
-    <select bind:value={selectedWorkCalendarId} onchange={() => refreshWorkCalendarWeekDays()}>
-      {#each workCalendars as c}
-        <option value={c.id}>{c.name}</option>
-      {/each}
-    </select>
-    <input type="number" bind:value={calendarGenYear} min="2020" max="2035" />
-    <button class="secondary" type="button" onclick={generateWorkCalendarYear}>
-      Jahr befüllen (Mo–Fr)
-    </button>
-    <button class="secondary" type="button" onclick={generateWorkCalendarTwoYears}>
-      {calendarGenYear} + {calendarGenYear + 1} befüllen
-    </button>
-    <button class="secondary" type="button" onclick={copyWorkCalendarWeek}>
-      Diese KW → nächste KW kopieren
-    </button>
-    <select bind:value={calendarRotationPlanId}>
-      <option value="">Kein Umschaltplan</option>
-      {#each rotationPlans as p}
-        <option value={p.id}>{p.name} ({p.cycle_days} Tage)</option>
-      {/each}
-    </select>
-    <button class="secondary" type="button" onclick={setCalendarRotation}>Umschaltplan zuweisen</button>
-  </div>
-  <div class="week-calendar" style="margin-top: 0.75rem;">
-    {#each workCalendarDays as d}
-      <div class="day-col">
-        <h4>{d.date.slice(8, 10)}.{d.date.slice(5, 7)}</h4>
-        <div class="shift-chip published" title={d.workday_model_id}>{d.model_name}</div>
-      </div>
-    {:else}
-      <p class="muted">Keine Kalendertage — Jahr befüllen oder Server neu starten (Seed).</p>
-    {/each}
-  </div>
-  <div class="grid-form" style="margin-top: 0.75rem;">
-    <input type="date" bind:value={calendarDayOverride.date} />
-    <select bind:value={calendarDayOverride.workday_model_id}>
-      {#each workdayModels as m}
-        <option value={m.id}>{m.name}</option>
-      {/each}
-    </select>
-    <button class="secondary" type="button" onclick={setCalendarDay}>Einzelnen Tag setzen</button>
-  </div>
-  <h4 style="margin-top: 1rem;">Tagesmodelle (Soll)</h4>
-  <ul class="compact-list">
-    {#each workdayModels as m}
-      <li>
-        <strong>{m.name}</strong>
-        <span class="muted">
-          — {formatMinutes(m.config.expected_minutes ?? 0)} Soll
-          {#if m.config.label} ({m.config.label}){/if}
-          {#if m.config.flex_band}
-            · Gleit {m.config.flex_band.earliest_start}–{m.config.flex_band.latest_end}
-          {/if}
-        </span>
-      </li>
-    {:else}
-      <li class="muted">Keine Tagesmodelle geladen.</li>
-    {/each}
-  </ul>
-  {#if workdayModels.length > 0}
-    <div class="grid-form" style="margin-top: 0.75rem;">
-      <select
-        bind:value={editModelId}
-        onchange={() => syncEditFromModel(editModelId)}
-      >
-        {#each workdayModels as m}
-          <option value={m.id}>{m.name}</option>
-        {/each}
-      </select>
-      <input
-        type="number"
-        bind:value={editExpectedMinutes}
-        min="0"
-        max="720"
-        step="15"
-        title="Soll Minuten pro Tag"
-      />
-      <input bind:value={editLabel} placeholder="Bezeichnung (optional)" />
-      <input bind:value={editFlexEarliest} placeholder="Gleit ab HH:MM" />
-      <input bind:value={editFlexLatest} placeholder="Gleit bis HH:MM" />
-      <button type="button" disabled={savingModel} onclick={saveWorkdayModel}>
-        {savingModel ? 'Speichern…' : 'Tagesmodell speichern'}
-      </button>
+<section class="period-shell">
+  <header class="period-header">
+    <div>
+      <h3>Perioden & Sollzeit</h3>
+      <p class="muted period-lead">
+        <strong>Tagesperioden</strong> definieren Soll, Gleitzeit und Pausen.
+        <strong>Jahresperioden</strong> ordnen jedem Tag eine Tagesperiode zu.
+        Schichtvorlagen sind nur Planung — Soll kommt hierher.
+      </p>
     </div>
-    <p class="muted" style="font-size: 0.8rem; margin-top: 0.35rem;">
-      Änderung an Soll/Gleitzeit löst Neuberechnung aller Kalender mit diesem Modell aus.
-    </p>
+  </header>
+
+  <nav class="period-tabs" aria-label="Perioden-Bereiche">
+    <button type="button" class:active={panel === 'tages'} onclick={() => (panel = 'tages')}>
+      Tagesperioden
+      <span class="tab-count">{workdayModels.length}</span>
+    </button>
+    <button type="button" class:active={panel === 'jahres'} onclick={() => (panel = 'jahres')}>
+      Jahresperioden
+      <span class="tab-count">{workCalendars.length}</span>
+    </button>
+    <button
+      type="button"
+      class:active={panel === 'feiertage'}
+      onclick={() => {
+        panel = 'feiertage';
+        void loadHolidayDays();
+      }}
+    >
+      Feiertage
+      <span class="tab-count">{holidayCalendars.length}</span>
+    </button>
+    <button
+      type="button"
+      class:active={panel === 'umschalt'}
+      onclick={() => (panel = 'umschalt')}
+    >
+      Umschaltplan
+      <span class="tab-count">{rotationPlans.length}</span>
+    </button>
+    <button
+      type="button"
+      class:active={panel === 'zuordnungen'}
+      onclick={() => (panel = 'zuordnungen')}
+    >
+      MA-Zuordnung
+      <span class="tab-count">{workAssignments.length}</span>
+    </button>
+  </nav>
+
+  {#if panel === 'tages'}
+    <div class="period-split">
+      <div class="period-list-pane card-inner">
+        <h4>Tagesperioden</h4>
+        <ul class="pick-list" role="listbox">
+          {#each workdayModels as m}
+            <li>
+              <button
+                type="button"
+                class="pick-item"
+                class:selected={editModelId === m.id}
+                onclick={() => selectModel(m.id)}
+              >
+                <span class="pick-title">{m.name}</span>
+                <span class="pick-meta muted">
+                  {formatMinutes(m.config.expected_minutes ?? 0)} Soll
+                  {#if m.config.flex_band}
+                    · {m.config.flex_band.earliest_start}–{m.config.flex_band.latest_end}
+                  {/if}
+                </span>
+              </button>
+            </li>
+          {:else}
+            <li class="muted">Keine Tagesperioden.</li>
+          {/each}
+        </ul>
+        <div class="inline-form">
+          <input bind:value={newModelName} placeholder="Neue Tagesperiode…" />
+          <button type="button" disabled={creatingModel} onclick={createWorkdayModel}>
+            {creatingModel ? '…' : '+ Anlegen'}
+          </button>
+        </div>
+      </div>
+
+      <div class="period-editor-pane card-inner">
+        {#if workdayModels.length > 0}
+          <h4>Bearbeiten</h4>
+          <div class="editor-grid">
+            <label class="field">
+              <span class="field-label">Name</span>
+              <input bind:value={editModelName} />
+            </label>
+            <label class="field">
+              <span class="field-label">Soll (Minuten)</span>
+              <input
+                type="number"
+                bind:value={editExpectedMinutes}
+                min="0"
+                max="720"
+                step="15"
+              />
+            </label>
+            <label class="field">
+              <span class="field-label">Bezeichnung (optional)</span>
+              <input bind:value={editLabel} />
+            </label>
+            <label class="field">
+              <span class="field-label">Gleitzeit von</span>
+              <input bind:value={editFlexEarliest} placeholder="HH:MM" />
+            </label>
+            <label class="field">
+              <span class="field-label">Gleitzeit bis</span>
+              <input bind:value={editFlexLatest} placeholder="HH:MM" />
+            </label>
+          </div>
+          <div class="btn-row">
+            <button type="button" disabled={savingModel} onclick={saveWorkdayModel}>
+              {savingModel ? 'Speichern…' : 'Speichern'}
+            </button>
+          </div>
+          <p class="muted fine-print">
+            Änderungen an Soll/Gleitzeit lösen Neuberechnung der Stundenzettel aus.
+          </p>
+        {:else}
+          <p class="muted">Legen Sie zuerst eine Tagesperiode an.</p>
+        {/if}
+      </div>
+    </div>
+  {:else if panel === 'jahres'}
+    <div class="card-inner">
+      <div class="toolbar-row">
+        <label class="field grow">
+          <span class="field-label">Jahresperiode</span>
+          <select
+            bind:value={selectedWorkCalendarId}
+            onchange={() => {
+              selectedDayDate = '';
+              void refreshWorkCalendarWeekDays();
+            }}
+          >
+            {#each workCalendars as c}
+              <option value={c.id}>{c.name}</option>
+            {/each}
+          </select>
+        </label>
+        <div class="inline-form">
+          <input bind:value={newCalendarName} placeholder="Neue Jahresperiode…" />
+          <button
+            type="button"
+            class="secondary"
+            disabled={creatingCalendar}
+            onclick={createWorkCalendar}
+          >
+            {creatingCalendar ? '…' : '+ Anlegen'}
+          </button>
+        </div>
+        <label class="field" style="margin-top: 0.75rem;">
+          <span class="field-label">Feiertagskalender (für diese Jahresperiode)</span>
+          <select bind:value={linkedHolidayCalendarId}>
+            <option value="">Keiner</option>
+            {#each holidayCalendars as h}
+              <option value={h.id}>{h.name}</option>
+            {/each}
+          </select>
+        </label>
+        <button type="button" class="secondary" onclick={saveLinkedHoliday}>
+          Feiertagskalender verknüpfen
+        </button>
+      </div>
+
+      <div class="btn-row week-nav">
+        <button class="secondary" type="button" onclick={() => shiftWeek(-1)}>← KW</button>
+        <span class="muted">{weekLabelForAnchor(shiftWeekAnchor)}</span>
+        <button class="secondary" type="button" onclick={() => shiftWeek(1)}>KW →</button>
+        <button class="secondary" type="button" onclick={goToThisWeek}>Diese Woche</button>
+      </div>
+
+      <div class="week-calendar period-week">
+        {#each workCalendarDays as d}
+          <button
+            type="button"
+            class="day-col day-col-btn"
+            class:selected={selectedDayDate === d.date}
+            onclick={() => selectCalendarDay(d)}
+          >
+            <span class="day-num">{d.date.slice(8, 10)}.{d.date.slice(5, 7)}</span>
+            <span class="shift-chip published">{d.model_name}</span>
+          </button>
+        {:else}
+          <p class="muted span-all">
+            Keine Tage in dieser Woche — Jahr befüllen oder andere KW wählen.
+          </p>
+        {/each}
+      </div>
+
+      {#if selectedDay}
+        <div class="day-editor card-inner subtle">
+          <h4>
+            {selectedDay.date} — Tagesperiode zuweisen
+          </h4>
+          <div class="inline-form">
+            <select bind:value={dayEditModelId}>
+              {#each workdayModels as m}
+                <option value={m.id}>{m.name}</option>
+              {/each}
+            </select>
+            <button type="button" onclick={saveSelectedDay}>Tag speichern</button>
+            <button
+              type="button"
+              class="secondary"
+              onclick={() => selectModel(selectedDay.workday_model_id)}
+            >
+              Tagesperiode bearbeiten →
+            </button>
+          </div>
+        </div>
+      {/if}
+
+      <details class="period-advanced">
+        <summary>Jahr befüllen, kopieren, Umschaltplan</summary>
+        <div class="toolbar-row" style="margin-top: 0.75rem;">
+          <input type="number" bind:value={calendarGenYear} min="2020" max="2035" />
+          <button class="secondary" type="button" onclick={generateWorkCalendarYear}>
+            Jahr befüllen (Mo–Fr)
+          </button>
+          <button class="secondary" type="button" onclick={generateWorkCalendarTwoYears}>
+            {calendarGenYear} + {calendarGenYear + 1}
+          </button>
+          <button class="secondary" type="button" onclick={copyWorkCalendarWeek}>
+            KW → KW+1 kopieren
+          </button>
+        </div>
+        <div class="inline-form" style="margin-top: 0.5rem;">
+          <select bind:value={calendarRotationPlanId}>
+            <option value="">Kein Umschaltplan</option>
+            {#each rotationPlans as p}
+              <option value={p.id}>{p.name} ({p.cycle_days} Tage)</option>
+            {/each}
+          </select>
+          <button class="secondary" type="button" onclick={setCalendarRotation}>
+            Umschaltplan zuweisen
+          </button>
+        </div>
+      </details>
+    </div>
+  {:else if panel === 'feiertage'}
+    <div class="card-inner">
+      <p class="ts-lead" style="margin-bottom: 0.75rem;">
+        Feiertage überschreiben den Jahreskalender. Verknüpfung pro Jahresperiode unter Tab
+        <button type="button" class="linkish" onclick={() => (panel = 'jahres')}>Jahresperioden</button>.
+      </p>
+      <div class="toolbar-row">
+        <label class="field grow">
+          <span class="field-label">Feiertagskalender anzeigen</span>
+          <select
+            bind:value={linkedHolidayCalendarId}
+            onchange={() => loadHolidayDays()}
+          >
+            <option value="">— wählen —</option>
+            {#each holidayCalendars as h}
+              <option value={h.id}>{h.name} ({h.year_from}–{h.year_to})</option>
+            {/each}
+          </select>
+        </label>
+        <input type="number" bind:value={holidayViewYear} min="2020" max="2035" />
+        <button class="secondary" type="button" onclick={() => loadHolidayDays()}>Laden</button>
+      </div>
+      <ul class="pick-list" style="max-height: 360px; margin-top: 0.75rem;">
+        {#each holidayDays as h}
+          <li class="pick-item" style="cursor: default;">
+            <span class="pick-title">{h.date}</span>
+            <span class="pick-meta muted">
+              {h.name ?? h.day_kind}
+              {#if h.model_name} · {h.model_name}{/if}
+            </span>
+          </li>
+        {:else}
+          <li class="muted">
+            {#if linkedHolidayCalendarId}
+              Keine Feiertage in {holidayViewYear} — Seed prüfen oder Jahr wechseln.
+            {:else}
+              Kalender wählen oder unter Jahresperioden verknüpfen.
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {:else if panel === 'umschalt'}
+    <div class="card-inner">
+      <p class="ts-lead" style="margin-bottom: 0.75rem;">
+        Zyklische Tagesperioden (z. B. Schichtwechsel). Zuweisung an eine Jahresperiode unter
+        <button type="button" class="linkish" onclick={() => (panel = 'jahres')}>Jahresperioden</button>
+        → Erweitert.
+      </p>
+      <label class="field">
+        <span class="field-label">Plan</span>
+        <select
+          bind:value={selectedRotationPlanId}
+          onchange={() => syncRotationSlotEdits()}
+        >
+          {#each rotationPlans as p}
+            <option value={p.id}>{p.name} ({p.cycle_days} Tage, ab {p.anchor_date})</option>
+          {/each}
+        </select>
+      </label>
+      {#if selectedRotationPlanId}
+        {@const plan = rotationPlans.find((p) => p.id === selectedRotationPlanId)}
+        {#if plan}
+          <div class="editor-grid" style="margin-top: 0.75rem;">
+            {#each Array(plan.cycle_days) as _, i}
+              {@const idx = i}
+              {@const slot = rotationSlotEdits.find((s) => s.slot_index === idx)}
+              <label class="field">
+                <span class="field-label">Tag {idx + 1} im Zyklus</span>
+                <select
+                  value={slot?.workday_model_id ?? 'wm-std-8h'}
+                  onchange={(e) => {
+                    const v = (e.currentTarget as HTMLSelectElement).value;
+                    const rest = rotationSlotEdits.filter((s) => s.slot_index !== idx);
+                    rotationSlotEdits = [...rest, { slot_index: idx, workday_model_id: v }];
+                  }}
+                >
+                  {#each workdayModels as m}
+                    <option value={m.id}>{m.name}</option>
+                  {/each}
+                </select>
+              </label>
+            {/each}
+          </div>
+          <div class="btn-row">
+            <button type="button" disabled={savingRotation} onclick={saveRotationSlots}>
+              {savingRotation ? 'Speichern…' : 'Slots speichern'}
+            </button>
+          </div>
+        {/if}
+      {/if}
+    </div>
+  {:else}
+    <div class="card-inner">
+      <p class="muted">
+        Welche Jahresperiode gilt für welchen Mitarbeiter ab welchem Datum (inkl. Teilzeit %).
+      </p>
+      <div class="editor-grid">
+        <label class="field">
+          <span class="field-label">Filter</span>
+          <select bind:value={workAssignmentEmployeeFilter} onchange={() => refresh()}>
+            <option value="">Alle Mitarbeiter</option>
+            {#each activeEmployees as e}
+              <option value={e.id}>{e.employee_no} — {e.display_name}</option>
+            {/each}
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Mitarbeiter</span>
+          <select bind:value={newWorkAssignment.employee_id}>
+            <option value="">Wählen…</option>
+            {#each activeEmployees as e}
+              <option value={e.id}>{e.employee_no} — {e.display_name}</option>
+            {/each}
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Jahresperiode</span>
+          <select bind:value={newWorkAssignment.work_calendar_id}>
+            {#each workCalendars as c}
+              <option value={c.id}>{c.name}</option>
+            {/each}
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Gültig ab</span>
+          <input type="date" bind:value={newWorkAssignment.valid_from} />
+        </label>
+        <label class="field">
+          <span class="field-label">Teilzeit %</span>
+          <input
+            type="number"
+            bind:value={newWorkAssignment.part_time_percent}
+            min="1"
+            max="100"
+          />
+        </label>
+      </div>
+      <div class="btn-row">
+        <button type="button" onclick={createWorkAssignment}>Zuordnung speichern</button>
+      </div>
+      <ul class="assignment-list">
+        {#each workAssignments as a}
+          <li class="assignment-row">
+            <button
+              type="button"
+              class="assignment-row-btn"
+              onclick={() => {
+                newWorkAssignment.employee_id = a.employee_id;
+                newWorkAssignment.work_calendar_id = a.work_calendar_id;
+                newWorkAssignment.valid_from = a.valid_from.slice(0, 10);
+                newWorkAssignment.part_time_percent = a.part_time_percent;
+              }}
+            >
+              <strong>{a.employee_no} {a.employee_name}</strong>
+              <span class="muted">→ {a.work_calendar_name}</span>
+              <span class="muted">ab {a.valid_from.slice(0, 10)}, {a.part_time_percent}%</span>
+            </button>
+          </li>
+        {:else}
+          <li class="muted">Noch keine Zuordnungen.</li>
+        {/each}
+      </ul>
+    </div>
   {/if}
-  <h4 style="margin-top: 1rem;">Mitarbeiter-Zuordnung</h4>
-  <div class="grid-form">
-    <select bind:value={workAssignmentEmployeeFilter} onchange={() => refresh()}>
-      <option value="">Alle Mitarbeiter</option>
-      {#each activeEmployees as e}
-        <option value={e.id}>{e.employee_no} — {e.display_name}</option>
-      {/each}
-    </select>
-    <select bind:value={newWorkAssignment.employee_id}>
-      <option value="">Mitarbeiter…</option>
-      {#each activeEmployees as e}
-        <option value={e.id}>{e.employee_no} — {e.display_name}</option>
-      {/each}
-    </select>
-    <select bind:value={newWorkAssignment.work_calendar_id}>
-      {#each workCalendars as c}
-        <option value={c.id}>{c.name}</option>
-      {/each}
-    </select>
-    <input type="date" bind:value={newWorkAssignment.valid_from} />
-    <input
-      type="number"
-      bind:value={newWorkAssignment.part_time_percent}
-      min="1"
-      max="100"
-      title="Teilzeit %"
-    />
-    <button type="button" onclick={createWorkAssignment}>Zuordnung speichern</button>
-  </div>
-  <ul class="compact-list" style="margin-top: 0.5rem;">
-    {#each workAssignments as a}
-      <li class="row-card">
-        {a.employee_no} {a.employee_name} → {a.work_calendar_name}
-        <span class="muted">ab {a.valid_from.slice(0, 10)}, {a.part_time_percent}%</span>
-      </li>
-    {:else}
-      <li class="muted">Keine Zuordnungen (Seed legt Standard-Kalender an).</li>
-    {/each}
-  </ul>
-</div>
+</section>

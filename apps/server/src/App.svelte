@@ -11,6 +11,7 @@
   import AbsenceTab from './components/AbsenceTab.svelte';
   import AccessTab from './components/AccessTab.svelte';
   import SystemTab from './components/SystemTab.svelte';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
 
   type Tab = 'overview' | 'personnel' | 'time' | 'absence' | 'access' | 'system';
   type TimeSection = 'stammdaten' | 'planung' | 'stundenzettel' | 'abschluss';
@@ -435,15 +436,15 @@
         onDataChange={onPersonnelData}
       />
     {:else if tab === 'time'}
-      <h2>Zeit</h2>
-      <p class="muted" style="margin-top: 0; margin-bottom: 0.75rem;">
-        Sollzeit aus Arbeitskalender · Schichten nur Planung · Freigabe bucht auf Zeitkonten
-      </p>
+      <TsPageHeader
+        title="Zeit"
+        lead="Sollzeit aus Perioden · Schichten nur Planung · Freigabe bucht auf Zeitkonten"
+      />
       <nav class="sub-nav" aria-label="Zeit-Bereiche">
         <button
           type="button"
           class:active={timeSection === 'stammdaten'}
-          onclick={() => selectTimeSection('stammdaten')}>Arbeitskalender</button>
+          onclick={() => selectTimeSection('stammdaten')}>Perioden & Soll</button>
         <button
           type="button"
           class:active={timeSection === 'planung'}

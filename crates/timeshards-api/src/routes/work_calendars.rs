@@ -32,7 +32,14 @@ pub fn routes() -> Router<Arc<AppState>> {
             "/api/v1/time/workday-models/{id}",
             put(update_workday_model),
         )
-        .route("/api/v1/time/work-calendars", get(list_work_calendars))
+        .route(
+            "/api/v1/time/work-calendars",
+            get(list_work_calendars).post(create_work_calendar),
+        )
+        .route(
+            "/api/v1/time/work-calendars/{id}",
+            put(update_work_calendar),
+        )
         .route(
             "/api/v1/time/work-calendars/{id}/days",
             get(list_calendar_days),
@@ -107,7 +114,26 @@ struct WorkCalendarDto {
     id: String,
     name: String,
     holiday_calendar_id: Option<String>,
+    rotation_plan_id: Option<String>,
     week_close_weekday: i32,
+}
+
+#[derive(Deserialize)]
+struct CreateWorkCalendarBody {
+    name: String,
+    #[serde(default)]
+    holiday_calendar_id: Option<String>,
+    #[serde(default)]
+    week_close_weekday: Option<i32>,
+}
+
+#[derive(Deserialize)]
+struct UpdateWorkCalendarBody {
+    #[serde(default)]
+    name: Option<String>,
+    /// `Some(Some(id))` set link, `Some(None)` clear, `None` leave unchanged.
+    #[serde(default)]
+    holiday_calendar_id: Option<Option<String>>,
 }
 
 #[derive(Serialize)]
@@ -378,6 +404,135 @@ async fn update_workday_model(
     }))
 }
 
+async fn create_work_calendar(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<CreateWorkCalendarBody>,
+) -> Result<Json<WorkCalendarDto>, ApiError> {
+    let session = auth_from_headers(&state.db, &headers).await?;
+    require_permission(&session, Resource::Shift, Action::Create)?;
+
+    let name = body.name.trim().to_string();
+    if name.is_empty() {
+        return Err(ApiError::bad_request("Name erforderlich"));
+    }
+    let week_close = body.week_close_weekday.unwrap_or(6).clamp(0, 6);
+    if let Some(ref hc) = body.holiday_calendar_id {
+        let hc_exists: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM holiday_calendars WHERE id = ?")
+                .bind(hc)
+                .fetch_one(&state.db)
+                .await
+                .map_err(|e| ApiError::internal(e.to_string()))?;
+        if hc_exists == 0 {
+            return Err(ApiError::bad_request("Feiertagskalender nicht gefunden"));
+        }
+    }
+
+    let id = Uuid::new_v4().to_string();
+    let now = Utc::now().to_rfc3339();
+    sqlx::query(
+        r#"
+        INSERT INTO work_calendars (id, name, holiday_calendar_id, week_close_weekday, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        "#,
+    )
+    .bind(&id)
+    .bind(&name)
+    .bind(&body.holiday_calendar_id)
+    .bind(week_close)
+    .bind(&now)
+    .bind(&now)
+    .execute(&state.db)
+    .await
+    .map_err(|e| ApiError::internal(e.to_string()))?;
+
+    Ok(Json(WorkCalendarDto {
+        id,
+        name,
+        holiday_calendar_id: body.holiday_calendar_id,
+        rotation_plan_id: None,
+        week_close_weekday: week_close,
+    }))
+}
+
+async fn update_work_calendar(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+    Json(body): Json<UpdateWorkCalendarBody>,
+) -> Result<Json<WorkCalendarDto>, ApiError> {
+    let session = auth_from_headers(&state.db, &headers).await?;
+    require_permission(&session, Resource::Shift, Action::Update)?;
+
+    if body.name.is_none() && body.holiday_calendar_id.is_none() {
+        return Err(ApiError::bad_request("Keine Felder zum Aktualisieren"));
+    }
+
+    let (mut name, mut holiday_calendar_id, rotation_plan_id, week_close_weekday): (
+        String,
+        Option<String>,
+        Option<String>,
+        i32,
+    ) = sqlx::query_as(
+        "SELECT name, holiday_calendar_id, rotation_plan_id, week_close_weekday FROM work_calendars WHERE id = ?",
+    )
+    .bind(&id)
+    .fetch_optional(&state.db)
+    .await
+    .map_err(|e| ApiError::internal(e.to_string()))?
+    .ok_or_else(|| ApiError::bad_request("Jahresperiode nicht gefunden"))?;
+
+    let holiday_changed = body.holiday_calendar_id.is_some();
+    if let Some(n) = body.name {
+        let trimmed = n.trim().to_string();
+        if trimmed.is_empty() {
+            return Err(ApiError::bad_request("Name erforderlich"));
+        }
+        name = trimmed;
+    }
+    if let Some(hc) = body.holiday_calendar_id {
+        if let Some(ref hc_id) = hc {
+            let hc_exists: i64 =
+                sqlx::query_scalar("SELECT COUNT(*) FROM holiday_calendars WHERE id = ?")
+                    .bind(hc_id)
+                    .fetch_one(&state.db)
+                    .await
+                    .map_err(|e| ApiError::internal(e.to_string()))?;
+            if hc_exists == 0 {
+                return Err(ApiError::bad_request("Feiertagskalender nicht gefunden"));
+            }
+        }
+        holiday_calendar_id = hc;
+    }
+
+    let now = Utc::now().to_rfc3339();
+    sqlx::query(
+        "UPDATE work_calendars SET name = ?, holiday_calendar_id = ?, updated_at = ? WHERE id = ?",
+    )
+    .bind(&name)
+    .bind(&holiday_calendar_id)
+    .bind(&now)
+    .bind(&id)
+    .execute(&state.db)
+    .await
+    .map_err(|e| ApiError::internal(e.to_string()))?;
+
+    if holiday_changed {
+        let _ = rebuild_timesheets_for_calendar(&state.db, &id, REBUILD_WEEKS_CALENDAR_EDIT)
+            .await
+            .map_err(|e| ApiError::internal(e.to_string()))?;
+    }
+
+    Ok(Json(WorkCalendarDto {
+        id,
+        name,
+        holiday_calendar_id,
+        rotation_plan_id,
+        week_close_weekday,
+    }))
+}
+
 async fn list_work_calendars(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -385,8 +540,8 @@ async fn list_work_calendars(
     let session = auth_from_headers(&state.db, &headers).await?;
     require_permission(&session, Resource::Shift, Action::Read)?;
 
-    let rows: Vec<(String, String, Option<String>, i32)> = sqlx::query_as(
-        "SELECT id, name, holiday_calendar_id, week_close_weekday FROM work_calendars ORDER BY name",
+    let rows: Vec<(String, String, Option<String>, Option<String>, i32)> = sqlx::query_as(
+        "SELECT id, name, holiday_calendar_id, rotation_plan_id, week_close_weekday FROM work_calendars ORDER BY name",
     )
     .fetch_all(&state.db)
     .await
@@ -394,12 +549,17 @@ async fn list_work_calendars(
 
     Ok(Json(
         rows.into_iter()
-            .map(|(id, name, holiday_calendar_id, week_close_weekday)| WorkCalendarDto {
-                id,
-                name,
-                holiday_calendar_id,
-                week_close_weekday,
-            })
+            .map(
+                |(id, name, holiday_calendar_id, rotation_plan_id, week_close_weekday)| {
+                    WorkCalendarDto {
+                        id,
+                        name,
+                        holiday_calendar_id,
+                        rotation_plan_id,
+                        week_close_weekday,
+                    }
+                },
+            )
             .collect(),
     ))
 }

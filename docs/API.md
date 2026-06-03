@@ -89,7 +89,10 @@ Omit or empty `employee_no` for auto-numbering (`E0001`, …). With `issue_badge
 | POST | `/api/v1/time/shift-templates/{id}/deactivate` | Soft-delete template |
 | GET/POST | `/api/v1/time/workday-models` | Tagesmodelle (Soll, Pausen, Feiertags-Gutschrift) |
 | PUT | `/api/v1/time/workday-models/{id}` | Tagesmodell aktualisieren; `config` ändert → Stundenzettel-Neuberechnung betroffener Kalender |
-| GET | `/api/v1/time/work-calendars` | Arbeitskalender (Jahresperiode) |
+| GET/POST | `/api/v1/time/work-calendars` | Jahresperioden; POST Body: `{ name, holiday_calendar_id? }` |
+| PUT | `/api/v1/time/work-calendars/{id}` | Body: `{ name?, holiday_calendar_id? }` (`null` = Feiertagskalender lösen) |
+| GET | `/api/v1/time/holiday-calendars` | Feiertagskalender |
+| GET | `/api/v1/time/holiday-calendars/{id}/days` | `?from=&to=` (YYYY-MM-DD) |
 | GET | `/api/v1/time/work-calendars/{id}/days` | `?from=&to=` (YYYY-MM-DD) |
 | POST | `/api/v1/time/work-calendars/{id}/generate-year` | Body: `{ year }` — Mo–Fr / Wochenende befüllen |
 | PUT | `/api/v1/time/work-calendars/{id}/days/{date}` | Body: `{ workday_model_id }` — Einzeltag überschreiben |
@@ -97,6 +100,7 @@ Omit or empty `employee_no` for auto-numbering (`E0001`, …). With `issue_badge
 | GET | `/api/v1/time/settlement-rules` | Abrechnungsregeln inkl. `config` (`enforce_flex_band`, `warn_negative_balance`) |
 | PUT | `/api/v1/time/settlement-rules/{id}` | Body: `{ config }` — z. B. Gleitzeit erzwingen |
 | GET | `/api/v1/time/work-rotation-plans` | Umschaltpläne mit Slots |
+| PUT | `/api/v1/time/work-rotation-plans/{id}/slots` | Body: `{ slots: [{ slot_index, workday_model_id }] }` |
 | PUT | `/api/v1/time/work-calendars/{id}/rotation` | Body: `{ rotation_plan_id: string \| null }` |
 | POST | `/api/v1/time/work-calendars/{id}/copy-days` | Body: `{ source_from, source_to, target_from }` (YYYY-MM-DD) |
 | GET | `/api/v1/time/settlement-periods/preview` | `?year=&month=&employee_id=` — Monatsvorschau |

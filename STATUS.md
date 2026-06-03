@@ -35,4 +35,4 @@ npm run smoke:production
 
 DATEV, full-year calendar editor, automatic stamp↔building sync.
 
-`ROADMAP.md` describes the long-term micro-kernel vision; the runnable product is documented in **FOUNDATION.md**.
+**Planning:** [ROADMAP.md](ROADMAP.md) (active milestones M1–M6) · [docs/PHASE2.md](docs/PHASE2.md) (integration tracks) · [docs/UI_UX_GUIDE.md](docs/UI_UX_GUIDE.md) (UI refactor).

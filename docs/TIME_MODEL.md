@@ -1,15 +1,15 @@
 # Time model (work calendar foundation)
 
-PrimeWeb-inspired layering for expected work time and timesheet evaluation. This is the **source of truth** for Sollzeit; `shift_templates` remain for planned shift instances (legacy UI) until fully migrated.
+TimeShards layering for expected work time and timesheet evaluation. This is the **source of truth** for Sollzeit; `shift_templates` remain for planned shift instances (legacy UI) until fully migrated.
 
 ## Concepts
 
-| TimeShards | PrimeWeb (pWT) | Purpose |
-|------------|----------------|---------|
-| **Workday model** (`workday_models`) | Tagesperiode | Per-day rules: Soll minutes, flex/core windows, break expectations, holiday credit |
-| **Holiday calendar** (`holiday_calendars` + `holiday_calendar_days`) | Kalender | Fixed/special days (public holidays, company days) |
-| **Work calendar** (`work_calendars` + `work_calendar_days`) | Jahresperiode | Maps each date to a workday model |
-| **Employee work assignment** (`employee_work_assignments`) | MA-Zuordnung | Which calendar applies, validity range, part-time % |
+| TimeShards concept | Purpose |
+|--------------------|---------|
+| **Workday model** (`workday_models`) — Tagesperiode | Per-day rules: Soll minutes, flex/core windows, break expectations, holiday credit |
+| **Holiday calendar** (`holiday_calendars` + `holiday_calendar_days`) | Fixed/special days (public holidays, company days) |
+| **Work calendar** (`work_calendars` + `work_calendar_days`) — Jahresperiode | Maps each date to a workday model |
+| **Employee work assignment** (`employee_work_assignments`) | Which calendar applies, validity range, part-time % |
 
 Built-in seed IDs (idempotent on API start):
 

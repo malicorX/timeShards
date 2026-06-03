@@ -156,15 +156,26 @@
         Zeitbasis: {tf.workday_models} Tagesmodelle, {tf.work_calendars} Kalender, {tf.active_employees}{' '}
         aktive MA
         {#if tf.employees_without_work_calendar > 0 || tf.current_week_drafts_without_soll > 0}
-          — <span style="color: #b8860b;">
-            {#if tf.employees_without_work_calendar > 0}
+          —
+          {#if tf.employees_without_work_calendar > 0}
+            <button
+              type="button"
+              class="linkish warn"
+              onclick={() => onNavigate?.({ tab: 'personnel', personnelNoCalendar: true })}
+            >
               {tf.employees_without_work_calendar} ohne Kalender
-            {/if}
-            {#if tf.current_week_drafts_without_soll > 0}
-              {#if tf.employees_without_work_calendar > 0}; {/if}
+            </button>
+          {/if}
+          {#if tf.current_week_drafts_without_soll > 0}
+            {#if tf.employees_without_work_calendar > 0}; {/if}
+            <button
+              type="button"
+              class="linkish warn"
+              onclick={() => onNavigate?.({ tab: 'time', timeSection: 'stammdaten' })}
+            >
               {tf.current_week_drafts_without_soll} KW ohne Soll
-            {/if}
-          </span>
+            </button>
+          {/if}
         {:else}
           — OK
         {/if}
@@ -288,7 +299,7 @@
             type="button"
             class="stat-card stat-card-btn"
             style="border-color: #b8860b;"
-            onclick={() => onNavigate?.({ tab: 'time', timesheetFilter: 'draft' })}
+            onclick={() => onNavigate?.({ tab: 'time', timeSection: 'stammdaten' })}
           >
             <span class="muted">KW ohne Soll (Entwurf)</span>
             <strong>{dashboard.timesheets_current_week_no_soll}</strong>

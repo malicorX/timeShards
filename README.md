@@ -168,16 +168,13 @@ Run once on the server PC as Administrator:
 
 Seeded on first run: site **Hauptstandort**, zone **Büro**, door **Haupteingang**, badge `DEMO-ADMIN-001`, DE policy pack (ArbZG-oriented v0).
 
-## Roadmap docs
+## Roadmap
 
-- `ROADMAP.md` / `ROADMAP_DETAILS.md` — product vision
-- `deep-research-report*.md` — research and build specs
+| Doc | Use |
+|-----|-----|
+| [ROADMAP.md](ROADMAP.md) | **Active** milestones (M1–M6), priorities, decision log |
+| [ROADMAP_DETAILS.md](ROADMAP_DETAILS.md) | Vision & feature catalog (status per row) |
+| [docs/PHASE2.md](docs/PHASE2.md) | Post-v1 tracks (DATEV, hardware, …) |
+| [docs/UI_UX_GUIDE.md](docs/UI_UX_GUIDE.md) | Server + client UI/UX refactor |
 
-## Next steps (post v1 foundation)
-
-- PostgreSQL option for multi-site central DB
-- DATEV bridge (Lohn-CSV export exists as interim)
-- Full-year calendar editor beyond KW copy + generate-year
-- Automatic stamp ↔ building access sync (process + KPI today)
-- Production hardware adapters behind `HardwareGateway`
-- Mobile / SaaS (later)
+`deep-research-report*.md` — background research only; promote items into ROADMAP.md before building.

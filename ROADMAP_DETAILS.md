@@ -1,179 +1,214 @@
-# AI TimeShards — Detailed Roadmap
+# AI TimeShards — Vision & Feature Catalog
+
+> **Planning:** Use **[ROADMAP.md](./ROADMAP.md)** for milestones and sprint priority.  
+> **Reality:** Use **[STATUS.md](./STATUS.md)** and **[docs/FOUNDATION.md](./docs/FOUNDATION.md)** for what is already in the repo.
+
+This document is the **long-range product picture**—features we may build, not a promise that every row is scheduled. Check the **Status** column against the active roadmap before starting work.
+
+---
+
+## Implementation snapshot (2026-06)
+
+| Track | In repo today | Next (see ROADMAP.md) |
+|-------|----------------|------------------------|
+| Time foundation (calendar → Soll) | ✅ | M3: Feiertag + Umschaltplan UI |
+| Stundenzettel + approve → Konten | ✅ | M2: UX polish |
+| Access simulation + anti-passback | ✅ | M4: hardware pilot |
+| Payroll CSV + Monats-Paket | ✅ | M5: DATEV feedback |
+| Go-Live / production mode | ✅ | M1 done |
+| Drag-and-drop shift planner | ⬜ partial | Schicht UI exists; not full DnD planner |
+| Biometrics / visitor badges | ⬜ | Phase 2+ |
+| PostgreSQL / SaaS | ⬜ | M6 deferred |
+
+---
 
 ## 1. Vision & Product Identity
 
-**AI TimeShards** is a cross-platform **desktop application** with a **modular, graphical user interface** designed to be **immediately intuitive** — even for first-time users who have never used time-tracking or access-control software before.
+**AI TimeShards** is a cross-platform **desktop application** with a role-aware UI that should be **discoverable by exploration, powerful by design**—even for users new to time tracking or access control.
 
-Drawing direct inspiration from **Primion PrimeWeb**, the application unifies two traditionally separate domains under one desktop experience:
+Two domains, one shell:
 
-1. **Time Tracking** — employee attendance, shift planning, overtime rules, and reporting.
-2. **Access Control** — physical/logical zone management, permission matrices, and badge/card-based entry control.
-
-The guiding principle for the entire UI/UX is: **discoverable by exploration, powerful by design**.
+1. **Time** — attendance, calendars (Soll), shifts (planning), absences, compliance hints, payroll handoff.
+2. **Access** — zones, doors, badges, rules, live occupancy, audit.
 
 ---
 
 ## 2. Target Platforms
 
-| Platform | Tier |
-|----------|------|
-| Windows 10/11 | Primary |
-| macOS 12+ | Primary |
-| Linux (Ubuntu & RedHat) | Secondary / Enterprise |
+| Platform | Tier | Notes |
+|----------|------|-------|
+| Windows 10/11 | **Primary** | Current CI and pilot focus |
+| macOS 12+ | Primary | Tauri-supported; less daily CI |
+| Linux (Ubuntu / RHEL) | Secondary | Enterprise installs |
 
-Distribution via standard OS installers (`.msi`, `.dmg`, `.AppImage` / `.rpm`).
+Distribution: Tauri bundles (`.msi`, `.dmg`, `.AppImage` / `.rpm`). Auto-updater: planned, not required for v1 pilot.
 
 ---
 
 ## 3. UI/UX Philosophy
 
-### 3.1 Modular Dashboard
-- A **configurable widget-based home screen** that allows users to:
-  - Rearrange modules (e.g. "My Time", "Zone Status", "Pending Approvals").
-  - Hide/show entire modules based on role.
-  - Choose between **compact** and **expanded** widget views.
+Aligned with **[docs/UI_UX_GUIDE.md](./docs/UI_UX_GUIDE.md)**:
 
-### 3.2 Three-Pillar Navigation
-The left sidebar groups all functionality into three intuitive pillars, visible to users based on their role:
+| Principle | Implementation target |
+|-----------|------------------------|
+| Informative screens | Lead text + KPIs + empty states with CTA |
+| Clickable density | Warnings and stats navigate to fix |
+| Shared design system | CSS tokens + `Ts*` components (server + client) |
+| Progressive disclosure | Advanced calendar tools in collapsible sections |
+| Role-based nav | Server: tabs; Client: pillars (Zeit, Abwesenheit, …) |
 
-| Pillar | Description |
-|--------|-------------|
-| **Time** | Clock-in/out, timesheets, schedules, absence/absence calendars, overtime |
-| **Access** | Zones, badges, doors/gates, real-time occupancy, permission rules |
-| **Admin** | Users, roles, reporting, audit logs, system configuration |
+### 3.1 Server navigation (current)
 
-### 3.3 Guided Onboarding
-- **First-run wizard**: configure company structure, import employees, assign badges.
-- **Role-aware tooltips** that explain what each panel does on first visit.
-- **Contextual help panel** (keyboard shortcut: `F1`) with searchable documentation.
+| Area | Purpose |
+|------|---------|
+| Übersicht | Login, KPIs, Go-Live, foundation-fix |
+| Personal | Employees, calendar assignment |
+| Zeit → Perioden & Soll | Tages-/Jahresperioden, MA-Zuordnung |
+| Zeit → Schichtplanung | Templates + KW shifts (planning only) |
+| Zeit → Stundenzettel / Abschluss | Approval, export, settlement |
+| Abwesenheit | Requests + approve |
+| Zutritt | Zones, doors, rules, simulate |
+| System | Health, policy, audit |
+
+### 3.2 Client pillars (current)
+
+| Pillar | Purpose |
+|--------|---------|
+| Zeit | Clock, KW summary, own shifts |
+| Abwesenheit | Request + status |
+| Freigaben | Manager queue (role-gated) |
+| Zutritt | Badge simulate, own events |
+| Konto | Settings, logout |
+
+### 3.3 Onboarding (status)
+
+| Feature | Status |
+|---------|--------|
+| Demo seed + default logins | ✅ dev/demo |
+| `TIMESHARDS_ADMIN_PASSWORD` on empty DB | ✅ |
+| Production Go-Live wizard | ✅ |
+| Full first-run wizard (company, import, badges) | ⬜ M3+ / PHASE2 |
 
 ### 3.4 Accessibility
-- Full keyboard navigability.
-- Screen-reader friendly ARIA labels.
-- High-contrast and dyslexia-friendly themes.
+
+| Feature | Status |
+|---------|--------|
+| Keyboard: real `<button>` elements | 🔄 improving |
+| Focus visible | ⬜ tokens + `:focus-visible` |
+| High-contrast theme | ⬜ |
+| Full i18n | ⬜ German only today |
 
 ---
 
-## 4. Feature Deep-Dive: Time Tracking
+## 4. Feature Catalog: Time
 
-| Feature | Details |
-|---------|---------|
-| **Clock-in / Clock-out** | NFC badge, RFID, mobile companion app, or manual |
-| **Shift Scheduling** | Drag-and-drop planner, recurring patterns, coverage alerts |
-| **Absence Management** | Vacation, sick leave, special leave with approval workflows |
-| **Overtime Calculation** | Configurable rules (daily/weekly thresholds, multipliers) |
-| **Break Rules** | Auto-detect, manual override, compliance tracking |
-| **Reporting** | PDF/HTML export, scheduled email reports, analytics dashboard |
-| **Integrations** | Payroll (Datev, Sage), calendars (Outlook, Google), ERP |
-
----
-
-## 5. Feature Deep-Dive: Access Control (Primion-Style)
-
-| Feature | Details |
-|---------|---------|
-| **Zones** | Hierarchical definition (Building → Floor → Room → Zone). Geofence + logical |
-| **Permissions** | Time-based, role-based, and exception-based access matrices |
-| **Badges / Credentials** | Smart cards, mobile tokens, biometrics (fingerprint, face) |
-| **Doors & Controllers** | Hardware integration via REST/MQTT with controllers (e.g., Axis, HID) |
-| **Live Monitoring** | Real-time door status, forced-open alarms, occupancy count |
-| **Anti-Passback** | Prevent card sharing with strict entry/exit logic |
-| **Visitor Management** | Temporary badges with auto-expiry and host notifications |
-| **Audit & Compliance** | Immutable access logs, GDPR-compliant data handling |
+| Feature | Status | Details |
+|---------|--------|---------|
+| Clock-in / out, breaks | ✅ | API + client; flex advisory/enforce |
+| **Soll from calendar** | ✅ | Tagesperiode + Jahresperiode |
+| Shift templates & KW shifts | ✅ | Planning; does not define Soll |
+| Absence request + approve | ✅ | Credit on approved types |
+| Overtime / flex accounts | ✅ | On timesheet approve |
+| Month close + settlement preview | ✅ | |
+| Timesheet HTML + Tagesdetails | ✅ | |
+| Payroll CSV (Lohn + Abwesenheiten) | ✅ | [PAYROLL_EXPORT.md](./docs/PAYROLL_EXPORT.md) |
+| Drag-and-drop shift planner | ⬜ | Recurring patterns, coverage alerts |
+| Scheduled email reports | ⬜ | |
+| Outlook/Google calendar sync | ⬜ | |
+| ERP connectors | ⬜ | DATEV track in [DATEV.md](./docs/DATEV.md) |
 
 ---
 
-## 6. Architecture & Technical Stack
+## 5. Feature Catalog: Access
 
-### 6.1 Desktop Frontend
-
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| **Framework** | Tauri v2 + SvelteKit 5 | Native performance, tiny bundle, modern web-based UI |
-| **UI Components** | Tailwind CSS + shadcn-svelte | Rapid, accessible, consistent styling |
-| **State** | Svelte 5 Runes + TanStack Query | Reactive, minimal boilerplate |
-| **Charts** | Chart.js or Victory | Responsive, accessible data viz |
-| **i18n** | `svelte-i18n` | Multi-language from day one |
-| **IPC** | Tauri Commands + Events | Secure bridge between Rust backend and JS frontend |
-
-### 6.2 Backend & Runtime
-
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| **Core Runtime** | Rust (Tauri) | Memory-safe, fast, small footprint, easy distribution |
-| **Local DB** | SQLite (via `sqlx` or `diesel`) | Zero-config, single-file, easy backups |
-| **Enterprise DB** | PostgreSQL (optional) | Scale for multi-user enterprise server mode |
-| **ORM / Query** | `sqlx` (async, compile-time checked) | Type safety, performance |
-| **API Layer** | Axum (embedded in Tauri) | For local HTTP API, third-party integrations |
-| **Background Jobs** | `tokio` tasks + local queue | Notifications, report generation, sync |
-
-### 6.3 Hardware Integration
-
-| Component | Protocol | Notes |
-|-----------|----------|-------|
-| Badge readers | Wiegand / OSDP² | Via USB/Serial to HID device handler |
-| Door controllers | REST / MQTT / Modbus | Rust async clients (`rumqttc`, `reqwest`) |
-| HID / USB | `rusb` / `hidapi` | Cross-platform Rust crates |
-| Biometrics | Vendor SDK (C/C++) via FFI | Wrapped in safe Rust modules |
-
-### 6.4 Build & Distribution
-
-| Step | Tool |
-|------|------|
-| Bundling | Tauri CLI (`tauri build`) |
-| CI/CD | GitHub Actions (matrix: Win/macOS/Linux) |
-| Code signing | `signtool` (Win), `codesign` (macOS), `gpg` (Linux) |
-| Auto-updater | Tauri Updater (GitHub Releases backend) |
+| Feature | Status | Details |
+|---------|--------|---------|
+| Zones, doors, rules | ✅ | Admin UI |
+| Badge CRUD + simulate | ✅ | DEMO-* UIDs in dev |
+| Anti-passback | ✅ | In/out readers |
+| Live occupancy + door alerts | ✅ | Dashboard + Zutritt |
+| Hardware-present channel | ✅ | Worker + poll events |
+| External TCP ingest | ✅ partial | Bridge-friendly JSON/lines |
+| Hierarchical zones (building→room) | ⬜ partial | Flat zones today |
+| Mobile credentials | ⬜ | |
+| Visitor temp badges | ⬜ | |
+| Wiegand / OSDP in-process | ⬜ | M4+ |
+| GDPR export/erase tooling | ⬜ partial | Audit log exists |
 
 ---
 
-## 7. Module Breakdown (Implementation Order)
+## 6. Architecture (as built)
 
-### Phase 1: Foundation (Q1)
-- [ ] Tauri + SvelteKit desktop shell with sidebar navigation
-- [ ] SQLite schema for Users, Roles, Zones, Badges, TimeEntries
-- [ ] Basic clock-in/out (manual UI, no hardware yet)
-- [ ] Settings & first-run wizard
+| Layer | Technology | Notes |
+|-------|------------|-------|
+| Desktop shell | **Tauri 2** | `apps/server`, `apps/client` |
+| UI | **Svelte 5** + global CSS | Not Tailwind/shadcn today—see UI guide |
+| API | **Axum** `timeshards-api` | Port 47821; headless `npm run api` |
+| DB | **SQLite** `timeshards-db` | Migrations + seed |
+| Hardware | `timeshards-hardware` | `sim` \| `external` |
+| Kernel sketch | `timeshards-kernel` | **Not** production path |
 
-### Phase 2: Time Tracking Core (Q2)
-- [ ] Shift scheduling UI (drag-and-drop calendar)
-- [ ] Absence request & approval workflow
-- [ ] Overtime rule engine
-- [ ] Timesheet PDF export
-
-### Phase 3: Access Control (Q3)
-- [ ] Zone management (hierarchical editor)
-- [ ] Permission matrix (role × zone × time)
-- [ ] Badge management (CRUD, activation/deactivation)
-- [ ] Simulated door events (UI test harness)
-
-### Phase 4: Hardware Integration (Q4)
-- [ ] Wiegand reader integration
-- [ ] Real controller communication (MQTT/REST)
-- [ ] Biometric enrollment & matching
-- [ ] Anti-passback logic
-
-### Phase 5: Enterprise Hardening (Q5)
-- [ ] PostgreSQL backend option
-- [ ] Multi-terminal synchronization
-- [ ] Advanced audit & GDPR compliance tools
-- [ ] Third-party ERP/payroll connectors
+Optional later: PostgreSQL, embedded vs sidecar API—see [PHASE2.md](./docs/PHASE2.md).
 
 ---
 
-## 8. Related Documents
+## 7. Historical phase plan (superseded)
 
-- `ROADMAP.md` — High-level project milestones and strategic goals (to be kept synchronized with this file).
+The Q1–Q5 checklist below was an **early estimate**. Use **[ROADMAP.md](./ROADMAP.md)** milestones M1–M6 instead.
+
+<details>
+<summary>Original phase checklist (archive)</summary>
+
+### Phase 1: Foundation
+- [x] Tauri + Svelte shell, sidebar nav
+- [x] SQLite schema (users, zones, time, calendars)
+- [x] Clock-in/out
+- [ ] Full first-run wizard (partial: Go-Live only)
+
+### Phase 2: Time core
+- [x] Absence workflow
+- [x] Timesheet export
+- [ ] Full DnD shift planner
+- [x] Overtime/flex via accounts (partial vs original “rule engine” vision)
+
+### Phase 3: Access
+- [x] Zones, rules, badges
+- [x] Simulated door events
+- [ ] Permission matrix UI at scale
+
+### Phase 4: Hardware
+- [ ] Wiegand/OSDP native
+- [x] External TCP bridge (partial)
+- [ ] Biometrics
+
+### Phase 5: Enterprise
+- [ ] PostgreSQL
+- [ ] Multi-terminal sync
+- [ ] ERP connectors
+
+</details>
 
 ---
 
-## 9. Open Questions & Decisions
+## 8. Open questions
 
-| # | Question | Status |
-|---|----------|--------|
-| 1 | Should we support cloud-hosted mode (SaaS) or strictly on-prem desktop? | TBD |
-| 2 | Which biometric vendors to prioritize? (e.g., Suprema, Idemia) | TBD |
-| 3 | Mobile companion app — native (Swift/Kotlin) or shared (Capacitor)? | TBD |
-| 4 | Licensing model: perpetual, subscription, per-user? | TBD |
+| # | Question | Status | Notes |
+|---|----------|--------|-------|
+| 1 | Cloud SaaS vs on-prem only? | **TBD** | Default: on-prem desktop + LAN API |
+| 2 | Biometric vendors? | TBD | After hardware pilot scope |
+| 3 | Mobile companion? | TBD | Capacitor vs native vs none |
+| 4 | Licensing (perpetual / sub / per-seat)? | TBD | Business decision |
 
-*Decision log should be updated as answers become available.*
+Record answers in [ROADMAP.md § Decision log](./ROADMAP.md#6-decision-log).
+
+---
+
+## 9. Document map
+
+| Doc | Use when |
+|-----|----------|
+| [ROADMAP.md](./ROADMAP.md) | Prioritizing next sprint |
+| [STATUS.md](./STATUS.md) | Release / pilot status |
+| [docs/UI_UX_GUIDE.md](./docs/UI_UX_GUIDE.md) | Designing or refactoring UI |
+| [docs/PHASE2.md](./docs/PHASE2.md) | Post-v1 integration tracks |
+| [ROADMAP.md Appendix A](./ROADMAP.md#appendix-a--platform-vision-deferred) | Platform/kernel curiosity only |

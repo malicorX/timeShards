@@ -70,6 +70,6 @@ All notable changes to this project are documented here.
 
 ## [0.1.0] — initial
 
-- PrimeWeb-inspired time foundation: work calendars, Tagesmodelle, Soll/Ist rebuild, timesheets, flex/overtime accounts, month close.
+- TimeShards time foundation: work calendars, Tagesmodelle, Soll/Ist rebuild, timesheets, flex/overtime accounts, month close.
 - Access control (simulated badges, anti-passback), Tauri server + client, Axum API on port 47821.
 - Demo seed, migrations, `npm run verify:foundation`, CI smoke jobs.

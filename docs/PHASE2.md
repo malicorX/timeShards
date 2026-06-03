@@ -1,23 +1,35 @@
 # Phase 2 — after v1 time foundation
 
-v1 (work calendar → Soll, rebuild, approvals, Konten, go-live UX) is documented in [FOUNDATION.md](./FOUNDATION.md) and [STATUS.md](../STATUS.md).
+v1 is **shipped** — see [STATUS.md](../STATUS.md), [FOUNDATION.md](./FOUNDATION.md), and milestone **M1** in [ROADMAP.md](../ROADMAP.md).
 
-## Planned tracks
+Phase 2 items are **tracks**, not a fixed quarter plan. Priority is set in [ROADMAP.md](../ROADMAP.md) (M2–M6).
 
-| Track | Goal | Notes |
-|-------|------|--------|
-| **DATEV** | Native or semi-native handoff to Lohn | Today: [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md) (Lohn- + Abwesenheiten-CSV). Spec checklist: [DATEV.md](./DATEV.md). |
-| **First-run setup** | Empty-DB onboarding (company, first MA, badges) | Today: seed + `TIMESHARDS_ADMIN_PASSWORD` + Go-Live-Assistent for production KPIs. |
-| **Hardware** | Production reader TCP / Primion path | Today: `sim` + `external` adapter; see [HARDWARE.md](./HARDWARE.md). |
-| **Stamp ↔ door** | Optional auto-sync or alerts | Today: dashboard KPI Zeit↔Zutritt; process clarification only. |
-| **Calendar UX** | Full-year editor | Today: KW copy + Jahr befüllen on work calendar. |
+---
+
+## Tracks ↔ roadmap milestones
+
+| Track | Roadmap | Goal | Today |
+|-------|---------|------|--------|
+| **UI/UX** | M2 | Shared tokens, informative + clickable UI | [UI_UX_GUIDE.md](./UI_UX_GUIDE.md); Perioden UI partial |
+| **Perioden** | M3 | Feiertag, Umschaltplan editor, full-year UX | KW + Jahr befüllen; POST calendars/models |
+| **Hardware** | M4 | Production reader via external bridge | `sim` + `external`; [HARDWARE.md](./HARDWARE.md) |
+| **DATEV / Lohn** | M5 | Bureau-validated export | Lohn- + Abwesenheiten-CSV; [DATEV.md](./DATEV.md) draft |
+| **First-run setup** | M3+ | Empty-DB onboarding beyond seed | Admin password + Go-Live wizard |
+| **Stamp ↔ door** | — | Optional auto-sync or stricter alerts | Dashboard KPI only |
+| **Enterprise DB** | M6 | PostgreSQL, multi-site | SQLite only |
+
+---
 
 ## Suggested order
 
-1. Pilot customer on v1 (demo off, Go-Live, payroll CSVs).
-2. DATEV or payroll bureau feedback → column mapping.
-3. Hardware on one door if access control is in scope.
-4. PostgreSQL / multi-site only when second site needs central DB.
+1. **M2** — UX foundation (tokens, client Zeit pillar, empty states).
+2. **Pilot** on v1 — demo off, [PILOT.md](./PILOT.md), one payroll month.
+3. **M3** — HR self-service for calendars (Feiertag, rotation editor).
+4. **M5** — Payroll bureau feedback → update DATEV.md or CSV columns.
+5. **M4** — Only if pilot needs physical doors.
+6. **M6** — Only when a second site needs central DB.
+
+---
 
 ## Verify before each release
 
@@ -25,3 +37,11 @@ v1 (work calendar → Soll, rebuild, approvals, Konten, go-live UX) is documente
 npm run verify:all
 npm run smoke:production
 ```
+
+---
+
+## Out of scope for Phase 2 (unless replanned)
+
+- Micro-kernel / shard marketplace ([ROADMAP.md Appendix A](../ROADMAP.md#appendix-a--platform-vision-deferred))
+- Full SaaS multi-tenant
+- Native mobile apps

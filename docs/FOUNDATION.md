@@ -1,6 +1,6 @@
 # Time model foundation (current)
 
-PrimeWeb-inspired **work calendar** stack — source of truth for **Sollzeit**. Shift templates only create **planned shift instances**; they do not define Soll.
+TimeShards **work calendar** stack — source of truth for **Sollzeit**. Shift templates only create **planned shift instances**; they do not define Soll.
 
 ## Architecture
 
@@ -60,7 +60,7 @@ flowchart TB
 | **Monats-Konten** | On month close: reconciliation delta vs weekly flex/ÜS postings (no double count) |
 | **Work summary** | `GET /api/v1/me/work-summary` — `work_calendar_assigned`, queues, `current_week` (lazy draft rebuild) |
 | **Tagesmodell PUT** | Config change → rebuild all calendars referencing that model |
-| **UI Server** | Zeit tab: `WorkCalendarCard` (Kalender + Tagesmodell bearbeiten), `ShiftWeekCard`, `TimesheetsCard`, `TimeSettlementCard` |
+| **UI Server** | Zeit → **Perioden & Soll** (`WorkCalendarCard`: Tages-/Jahresperioden, Zuordnung), `ShiftWeekCard`, `TimesheetsCard`, `TimeSettlementCard` |
 | **Neuer MA** | `POST /admin/employees` mit `grant_work_calendar` (default) → Standard-Arbeitskalender + Rebuild |
 | **Dashboard** | `employees_without_work_calendar`, `timesheets_current_week_no_soll`, **`time_access_mismatch_count`** / `time_access_mismatches[]`; **`POST /admin/foundation-fix`** |
 | **Personnel** | `work_calendar_assigned` pro MA; Filter „ohne Arbeitskalender“; `grant-work-calendar` |

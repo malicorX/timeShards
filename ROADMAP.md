@@ -1,62 +1,222 @@
-# TimeShards: Architectural Roadmap
+# AI TimeShards — Product Roadmap (active)
 
-> **Runnable product today:** Germany-first time + access desktop apps with work-calendar Soll/Ist foundation.
-> See [STATUS.md](./STATUS.md), [docs/FOUNDATION.md](./docs/FOUNDATION.md), and [docs/PRODUCTION.md](./docs/PRODUCTION.md).
-> The phases below describe the longer-term **micro-kernel** vision, not the current shipping scope.
+**Last updated:** 2026-06-03 · **Shipping line:** v0.2.x (time foundation + access simulation + payroll CSVs)
 
-## 1. Vision
-TimeShards is a time-tracking ecosystem designed for **extreme modularity**. The goal is to provide a tool that is simple for the end-user but infinitely extensible for the developer/customer. Functionality should be treatable as "shards"—pluggable components that can be added or removed without impacting the core system.
+This is the **canonical plan** for what we build next. It reflects the **monolithic Axum API + two Tauri apps** in the repo today—not the optional micro-kernel experiment in `crates/timeshards-kernel`.
 
-## 2. Core Philosophy: The Micro-Kernel
-To achieve extreme modularity, TimeShards will follow a **Micro-Kernel Architecture**. 
+| Document | Role |
+|----------|------|
+| **This file** | Near-term milestones, acceptance criteria, priority |
+| [STATUS.md](./STATUS.md) | What is shipped *right now* |
+| [docs/FOUNDATION.md](./docs/FOUNDATION.md) | Time model (Soll/Ist) — implemented scope |
+| [docs/PHASE2.md](./docs/PHASE2.md) | Post-v1 tracks (DATEV, hardware, …) |
+| [docs/UI_UX_GUIDE.md](./docs/UI_UX_GUIDE.md) | Server + client UI/UX refactor phases |
+| [ROADMAP_DETAILS.md](./ROADMAP_DETAILS.md) | Long-range vision & feature catalog (not all scheduled) |
+| Appendix below | Deferred **platform / shard** architecture |
 
-- **The Kernel**: A minimal core responsible only for module registration, lifecycle management (init, start, stop, destroy), and the central communication hub.
-- **The Shards (Modules)**: All business logic—including the actual timers, reporting, and user management—resides in modules. This ensures the core remains lightweight and agnostic of specific features.
+---
 
-## 3. Technical Pillars
+## 1. North star
 
-### 3.1 Internal Data Communication (The Event Bus)
-To prevent modules from becoming tightly coupled, communication will happen via an **Asynchronous Event Bus**.
-- **Pub/Sub Pattern**: Modules do not call each other directly. Instead, they publish events (e.g., `Timer.Started`, `Project.Changed`) and subscribe to events they care about.
-- **Data Contracts**: Strictly defined schemas (e.g., JSON Schema or Protobuf) for events to ensure compatibility between modules from different authors.
+**Germany-first desktop** time tracking and access control in **one product**: intuitive for first-time users, strict enough for HR and works-council-oriented workflows (ArbZG-oriented warnings, audit-friendly logs, clear Soll from calendars—not from shift templates alone).
 
-### 3.2 Modular GUI/UX (Slot-and-Widget System)
-The UI shall be as modular as the backend. 
-- **UI Slots**: The main interface consists of named "Slots" (e.g., `Sidebar.Top`, `Main.Dashboard`, `Footer.Status`).
-- **Widget Registration**: Modules register UI Widgets to these slots. The Kernel handles the rendering of whatever widgets are currently active.
-- **Dynamic Layouts**: Users can drag-and-drop widgets between slots, effectively customizing their own UX based on the modules they have installed.
+**Success for the next 6 months:** one pilot customer runs **demo off**, stable CI, payroll handoff via CSV, and optional **one real door** on the external hardware adapter.
 
-### 3.3 Data Handling (The Adapter Layer)
-Data persistence must be decoupled from the logic.
-- **Repository Pattern**: Modules interact with a generic `DataRepository` interface.
-- **Storage Adapters**: The actual storage implementation (SQLite, PostgreSQL, MongoDB, or a Cloud API) is itself a module. Switching from a local file to a cloud database requires only swapping the Storage Adapter module.
+---
 
-## 4. Implementation Strategy
+## 2. Shipped baseline (do not re-plan)
 
-### Phase 1: The Foundation (The Kernel)
-- [ ] Define the `IModule` interface.
-- [ ] Implement the Module Loader and Lifecycle Manager.
-- [ ] Build the central Event Bus.
+Treat as done unless a row is marked **partial**:
 
-### Phase 2: Basic Functionality (The First Shards)
-- [ ] **Timer Shard**: Basic start/stop/pause logic.
-- [ ] **Local Storage Shard**: Simple JSON/SQLite implementation.
-- [ ] **Basic UI Shard**: A simple window with a few slots.
+| Area | Shipped | Doc |
+|------|---------|-----|
+| Work calendar → Soll, rebuild, KW Berlin | ✅ | [FOUNDATION.md](./docs/FOUNDATION.md) |
+| Stempeln, breaks, timesheets, approve → Konten | ✅ | |
+| Month close, Lohn- + Abwesenheiten-CSV, Monats-Paket UI | ✅ | [PAYROLL_EXPORT.md](./docs/PAYROLL_EXPORT.md) |
+| Access sim, anti-passback, occupancy, hardware-present | ✅ | [HARDWARE.md](./docs/HARDWARE.md) |
+| External TCP ingest (`TIMESHARDS_HW_ADAPTER=external`) | ✅ partial | Not full OEM protocol |
+| Go-Live wizard, production checklist, foundation-fix | ✅ | [PRODUCTION.md](./docs/PRODUCTION.md) |
+| CI: rust, frontend, smokes, `verify-foundation` | ✅ | `.github/workflows/ci.yml` |
+| Perioden UI (tabs, create Tages-/Jahresperiode, klickbare KW) | ✅ partial | [UI_UX_GUIDE.md](./docs/UI_UX_GUIDE.md) |
 
-### Phase 3: Extensibility Framework
-- [ ] Develop the Widget API for GUI modules.
-- [ ] Implement a configuration system for module-specific settings.
-- [ ] Create a "Module Manifest" system for easy installation/removal.
+---
 
-### Phase 4: Advanced Ecosystem
-- [ ] **Analytics Shard**: Complex reporting and visualization.
-- [ ] **Integration Shards**: Connectors for Jira, Trello, or GitHub.
-- [ ] **Marketplace/Gallery**: A way for users to discover and share custom shards.
+## 3. Milestones (active)
 
-## 5. Summary of Modularity Goals
-| Layer | Modularity Approach | Outcome |
-| :--- | :--- | :--- |
-| **Logic** | Micro-Kernel / Plugins | Feature set can be changed without touching core code. |
-| **Communication** | Event Bus (Pub/Sub) | Modules are decoupled; adding a new module requires no change to existing ones. |
-| **UI/UX** | Slot-and-Widget | User can customize the interface by adding/removing UI components. |
-| **Data** | Adapter Pattern | Database backend can be swapped without affecting business logic. |
+### M1 — Pilot hardening ✅ *mostly complete*
+
+**Goal:** A new install can go live without demo data; ops can verify health and payroll exports.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| `TIMESHARDS_DISABLE_DEMO`, block default passwords | ✅ | `smoke:production` |
+| Foundation health + `foundation-fix` | ✅ | Dashboard KPIs |
+| Payroll month bundle + absences CSV smoke | ✅ | v0.2.2 |
+| CI smoke stability (GHA PowerShell) | ✅ | `Invoke-RestMethod` pattern |
+| [PILOT.md](./docs/PILOT.md) cutover checklist | ✅ | |
+
+**Exit:** `npm run verify:all` + `smoke:production` green; pilot doc walkthrough once on clean DB.
+
+---
+
+### M2 — UX & informativeness 🔄 *in progress*
+
+**Goal:** Server and client feel like **one modern product**—every important number clickable, clear context on every screen.
+
+| Item | Status | Owner doc |
+|------|--------|-----------|
+| Shared design tokens (`tokens.css`) | ✅ | `apps/shared/styles/` |
+| `TsCard` / `TsPageHeader` shared components | ✅ partial | `apps/shared/ui/` |
+| Perioden screen as reference (master–detail, tabs) | ✅ | `WorkCalendarCard` + Feiertage/Umschalt |
+| Overview KPIs → deep links | ✅ partial | `OverviewTab` |
+| Stundenzettel row → Tagesdetails | ✅ partial | `TimesheetsCard` |
+| Client Zeit pillar: status + Soll/Ist prominent | ✅ | `ClientTimePillar` hero |
+| Zutritt / Personal: pick-list + detail | ⬜ | Phase B–C |
+| Empty states + lead text on all main tabs | ⬜ | DoD in UI guide |
+
+**Exit:** UI guide Phase B checklist; no a11y warnings on new interactive patterns; 2–3 screenshot baselines for regression (optional).
+
+---
+
+### M3 — Perioden & calendar completeness ⬜
+
+**Goal:** HR can **create and maintain** Tagesperioden and Jahresperioden without SQL or seed-only workflows.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| CRUD Tagesperioden (create/edit name, Soll, Gleit) | ✅ partial | PUT + POST API; UI tabs |
+| CRUD Jahresperioden (create calendar) | ✅ partial | POST API; UI create |
+| KW view: click day → assign model | ✅ | |
+| Jahr befüllen + KW kopieren | ✅ | |
+| **Feiertagskalender** UI (link to Jahresperiode) | ✅ partial | Tab Feiertage + `PUT` link |
+| **Umschaltplan** editor (slots, not only assign) | ✅ partial | Tab Umschaltplan + `PUT …/slots` |
+| Full-year grid editor (beyond KW + generate-year) | ⬜ | PHASE2 track |
+| `POST` / `PUT` work-calendars | ✅ | API + UI |
+
+**Exit:** New customer: admin creates 2 Tagesperioden, 1 Jahresperiode, fills year, assigns 3 MA—no server restart required.
+
+---
+
+### M4 — Hardware pilot ⬜
+
+**Goal:** One production door path via **external adapter** (bridge), not full Wiegand/OSDP in-process yet.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| `sim` + `external` adapters | ✅ | |
+| TCP JSON + compact line + door state | ✅ | `smoke:hw-external` |
+| Document bridge deployment | ⬜ | Extend [HARDWARE.md](./docs/HARDWARE.md) |
+| Pilot: one reader → one door mapping | ⬜ | Site-specific |
+| Fail-closed defaults review (zones without rules) | ⬜ | See GPT55 review notes |
+
+**Exit:** 1-week pilot log; access events match physical tests; no silent bind failures on restart.
+
+---
+
+### M5 — Payroll & DATEV feedback ⬜
+
+**Goal:** Bureau or DATEV consultant validates CSVs; gaps become a short spec—not a big bang integration.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Lohn-CSV + Abwesenheiten-CSV | ✅ | UTF-8 BOM |
+| [DATEV.md](./docs/DATEV.md) mapping draft | ✅ | |
+| Column feedback from first pilot payroll run | ⬜ | |
+| Optional: DATEV-native export (Phase 2) | ⬜ | After feedback |
+
+**Exit:** Signed-off column list OR explicit “CSV-only for v1” decision recorded in DATEV.md.
+
+---
+
+### M6 — Enterprise & platform ⬜ *deferred*
+
+Only when a **second site** or central IT requires it:
+
+| Item | Notes |
+|------|--------|
+| PostgreSQL / central DB | [PHASE2.md](./docs/PHASE2.md) |
+| Multi-terminal sync | |
+| SaaS / mobile companion | Open questions in ROADMAP_DETAILS |
+| Micro-kernel / shard platform | Appendix below; do **not** block M2–M5 |
+
+---
+
+## 4. Suggested execution order (2026 H2)
+
+```mermaid
+gantt
+  title Active roadmap (indicative)
+  dateFormat YYYY-MM
+  section Hardening
+  M1 Pilot           :done, 2026-05, 2026-06
+  section UX
+  M2 UX Phase A-B    :active, 2026-06, 2026-07
+  M3 Perioden        :2026-07, 2026-08
+  section Integrations
+  M4 Hardware pilot  :2026-08, 2026-09
+  M5 Payroll/DATEV   :2026-08, 2026-10
+```
+
+1. Finish **M2** (tokens + shared components + client Zeit pillar).
+2. Parallel **M3** (Feiertag + Umschaltplan UI) — unblocks HR self-service.
+3. **M4** when pilot needs physical access; else stay on `sim`.
+4. **M5** after first real payroll month export.
+
+---
+
+## 5. Quality gates (every milestone)
+
+```powershell
+npm run check:all
+npm run verify:foundation
+npm run smoke:production   # before release / pilot
+```
+
+- German UI strings for user-visible text.
+- No new vendor product names in docs/UI (see project glossary in UI guide).
+- API changes: `docs/API.md` + smoke path if user-facing.
+
+---
+
+## 6. Decision log
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-06 | **Active roadmap = product monolith**, not micro-kernel | Code and pilots follow Axum + SQLite + 2 apps |
+| 2026-06 | Shift templates ≠ Soll | Calendar foundation is source of truth |
+| 2026-06 | Payroll v1 = CSV (+ Monats-Paket), DATEV later | Ship pilot; learn columns first |
+| 2026-06 | UI/UX guide owns visual refactor | One design system for server + client |
+| — | Cloud/SaaS vs on-prem only | **TBD** — default on-prem desktop |
+| — | Mobile companion | **TBD** — after pilot stable |
+
+*Add a row when a TBD in ROADMAP_DETAILS is resolved.*
+
+---
+
+## Appendix A — Platform vision (deferred)
+
+The following describes a **future** modular architecture. `crates/timeshards-kernel` is a sketch only; **do not** prioritize kernel work ahead of M2–M5 unless explicitly replanning.
+
+### Micro-kernel idea
+
+- **Kernel:** module registration, lifecycle, event bus only.
+- **Shards:** time, access, reporting as plug-ins.
+- **UI:** slot/widget registration per module.
+- **Data:** storage adapter pattern (SQLite today is fine).
+
+### Phases (platform — not scheduled)
+
+| Phase | Scope |
+|-------|--------|
+| P-K1 | `IModule`, loader, event bus |
+| P-K2 | Timer + storage + basic UI shards |
+| P-K3 | Widget API + module manifest |
+| P-K4 | Analytics + integrations marketplace |
+
+**Trigger to revisit:** pain from monolith boundaries (e.g. third-party modules, multiple UIs) *after* pilot revenue or a paid extensibility requirement—not before.
+
+---
+
+## Appendix B — Related research
+
+`deep-research-report*.md` — background only; **do not** treat as sprint backlog. Promote items into milestones above before building.

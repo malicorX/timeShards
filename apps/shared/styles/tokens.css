@@ -1,0 +1,40 @@
+/* TimeShards design tokens — import in server + client app.css */
+:root {
+  --ts-bg-app: #12141a;
+  --ts-bg-elevated: #1a1e28;
+  --ts-bg-sunken: #12151f;
+  --ts-bg-sidebar: #0e1016;
+  --ts-bg-hover: #1e2433;
+  --ts-bg-active: #243056;
+  --ts-bg-selected: #1a2548;
+
+  --ts-border: #2a3142;
+  --ts-border-focus: #3d6cf5;
+
+  --ts-text: #e8eaed;
+  --ts-text-muted: #8b93a7;
+  --ts-text-accent: #9fb0ff;
+
+  --ts-primary: #3d6cf5;
+  --ts-primary-hover: #4d7aff;
+  --ts-secondary: #2a2f3d;
+
+  --ts-success: #7ddea2;
+  --ts-warning: #e8c070;
+  --ts-danger: #ff8f8f;
+  --ts-danger-bg: #3a1518;
+
+  --ts-chip-planned-bg: #4a3a10;
+  --ts-chip-planned-border: #b8860b;
+  --ts-chip-published-bg: #1e3a2f;
+  --ts-chip-published-border: #3d9a6a;
+  --ts-chip-draft: #5a6278;
+
+  --ts-radius-sm: 6px;
+  --ts-radius-md: 8px;
+  --ts-radius-lg: 12px;
+  --ts-shadow-focus: 0 0 0 2px var(--ts-border-focus);
+
+  --ts-font: 'Segoe UI', system-ui, sans-serif;
+  --ts-sidebar-width: 220px;
+}

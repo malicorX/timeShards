@@ -1,7 +1,10 @@
+@import '../../shared/styles/tokens.css';
+@import '../../shared/styles/components.css';
+
 :root {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  color: #e8eaed;
-  background: #12141a;
+  font-family: var(--ts-font);
+  color: var(--ts-text);
+  background: var(--ts-bg-app);
   line-height: 1.5;
 }
 
