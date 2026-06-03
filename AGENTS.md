@@ -17,6 +17,7 @@ npm run check:all               # scripts/check.ps1 (cargo + svelte-check)
 .\scripts\check.ps1              # same as check:all
 npm run verify:foundation       # cargo test timeshards-db + smoke:api
 npm run verify:all              # check:all + verify:foundation
+npm run verify:doors            # door/reader table for HW bridge (API must run)
 npm run foundation:health       # GET /health time_foundation (API must run)
 ```
 

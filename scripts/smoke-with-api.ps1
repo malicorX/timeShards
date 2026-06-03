@@ -61,6 +61,7 @@ Wait-TimeshardsApiHealth -HealthUrl $healthUrl -TimeoutSec $HealthTimeoutSec -Ap
 Write-Host "API ready.`n"
 try {
     & (Join-Path $PSScriptRoot "smoke-test.ps1") -ApiUrl $ApiUrl
+    & (Join-Path $PSScriptRoot "verify-door-readers.ps1") -ApiUrl $ApiUrl
 } finally {
     Write-Host "`nStopping API..."
     Stop-Job $apiJob -ErrorAction SilentlyContinue

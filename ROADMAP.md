@@ -85,7 +85,7 @@ Treat as done unless a row is marked **partial**:
 | Item | Status | Notes |
 |------|--------|-------|
 | CRUD Tagesperioden (create/edit name, Soll, Gleit) | ✅ partial | PUT + POST API; UI tabs |
-| CRUD Jahresperioden (create calendar) | ✅ partial | POST API; UI create |
+| CRUD Jahresperioden (create calendar) | ✅ | POST + rename (`PUT` name) |
 | KW view: click day → assign model | ✅ | |
 | Jahr befüllen + KW kopieren | ✅ | |
 | **Feiertagskalender** UI (link to Jahresperiode) | ✅ partial | Tab Feiertage + `PUT` link |
@@ -97,7 +97,7 @@ Treat as done unless a row is marked **partial**:
 
 ---
 
-### M4 — Hardware pilot ⬜
+### M4 — Hardware pilot ✅ *code-ready; site bridge pending*
 
 **Goal:** One production door path via **external adapter** (bridge), not full Wiegand/OSDP in-process yet.
 
@@ -106,8 +106,8 @@ Treat as done unless a row is marked **partial**:
 | `sim` + `external` adapters | ✅ | |
 | TCP JSON + compact line + door state | ✅ | `smoke:hw-external` |
 | Document bridge deployment | ✅ | [HARDWARE.md](./docs/HARDWARE.md) pilot section |
-| Pilot: one reader → one door mapping | ⬜ | Site-specific |
-| Fail-closed defaults review (zones without rules) | ✅ partial | Documented in HARDWARE.md |
+| Pilot: one reader → one door mapping | ✅ partial | `npm run verify:doors` + site bridge config |
+| Fail-closed defaults review (zones without rules) | ✅ | HARDWARE.md + verify:doors allow-rule check |
 
 **Exit:** 1-week pilot log; access events match physical tests; no silent bind failures on restart.
 

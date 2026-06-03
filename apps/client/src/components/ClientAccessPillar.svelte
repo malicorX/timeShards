@@ -2,6 +2,8 @@
   import { api, downloadFile } from '../lib/api';
   import { formatIsoShort } from '../lib/datetime';
   import { accessDecisionLabel, reasonLabel } from '../lib/accessLabels';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
+  import TsEmptyState from '@timeshards/shared/ui/TsEmptyState.svelte';
 
   type UiMessage = { type: 'error' | 'success'; text: string };
 
@@ -88,7 +90,10 @@
   }
 </script>
 
-<h2>Zutritt</h2>
+<TsPageHeader
+  title="Zutritt"
+  lead="Badge, letzte Scans und Demo-Simulator. Eingang und Ausgang wechseln nach erfolgreichem Scan."
+/>
 {#if accessSummary}
   <div class="card">
     <h3>Meine Karte</h3>
@@ -99,7 +104,7 @@
         — {b.status}
       </p>
     {:else}
-      <p class="muted">Kein Badge zugewiesen</p>
+      <TsEmptyState message="Kein Badge zugewiesen — Admin stellt Karte in Personal/Zutritt aus." />
     {/each}
     {#if accessSummary.badges.some((b) => b.status === 'active')}
       <p class="muted" style="margin-top: 0.5rem;">
@@ -126,17 +131,19 @@
   </div>
   <div class="card" style="margin-top: 1rem;">
     <h3>Letzte Zutritte</h3>
-    <ul>
-      {#each accessSummary.recent_events as ev}
-        <li>
-          {accessDecisionLabel(ev.decision)} — {reasonLabel(ev.reason_code)}
-          {#if ev.zone_name}<span class="muted"> ({ev.zone_name})</span>{/if}
-          — {formatIsoShort(ev.occurred_at)}
-        </li>
-      {:else}
-        <li class="muted">Noch keine Ereignisse</li>
-      {/each}
-    </ul>
+    {#if accessSummary.recent_events.length === 0}
+      <TsEmptyState message="Noch keine Zutrittsereignisse — Scan simulieren oder Leser am Eingang nutzen." />
+    {:else}
+      <ul>
+        {#each accessSummary.recent_events as ev}
+          <li>
+            {accessDecisionLabel(ev.decision)} — {reasonLabel(ev.reason_code)}
+            {#if ev.zone_name}<span class="muted"> ({ev.zone_name})</span>{/if}
+            — {formatIsoShort(ev.occurred_at)}
+          </li>
+        {/each}
+      </ul>
+    {/if}
   </div>
 {:else}
   <p class="muted">Zutrittsdaten werden geladen…</p>

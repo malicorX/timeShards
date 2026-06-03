@@ -83,6 +83,8 @@
   let linkedHolidayCalendarId = $state('');
   let holidayViewYear = $state(new Date().getFullYear());
   let newCalendarName = $state('');
+  let editCalendarName = $state('');
+  let savingCalendarName = $state(false);
   let creatingCalendar = $state(false);
   let rotationPlans = $state<RotationPlan[]>([]);
   let selectedRotationPlanId = $state('');
@@ -174,6 +176,33 @@
       apiUrl,
       `/api/v1/time/holiday-calendars/${linkedHolidayCalendarId}/days?from=${from}&to=${to}`,
     ).catch(() => []);
+  }
+
+  $effect(() => {
+    const cal = workCalendars.find((c) => c.id === selectedWorkCalendarId);
+    editCalendarName = cal?.name ?? '';
+  });
+
+  async function saveCalendarName() {
+    const name = editCalendarName.trim();
+    if (!selectedWorkCalendarId || !name) {
+      notify('error', 'Name der Jahresperiode eingeben');
+      return;
+    }
+    savingCalendarName = true;
+    try {
+      await api(apiUrl, `/api/v1/time/work-calendars/${selectedWorkCalendarId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name }),
+      });
+      await refresh();
+      onWeekChange?.();
+      notify('success', 'Jahresperiode umbenannt');
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : String(e));
+    } finally {
+      savingCalendarName = false;
+    }
   }
 
   async function saveLinkedHoliday() {
@@ -769,6 +798,17 @@
             {/each}
           </select>
         </label>
+        <div class="inline-form" style="margin-top: 0.5rem;">
+          <input bind:value={editCalendarName} placeholder="Name der Jahresperiode" />
+          <button
+            type="button"
+            class="secondary"
+            disabled={savingCalendarName}
+            onclick={saveCalendarName}
+          >
+            {savingCalendarName ? '…' : 'Name speichern'}
+          </button>
+        </div>
         <div class="inline-form">
           <input bind:value={newCalendarName} placeholder="Neue Jahresperiode…" />
           <button

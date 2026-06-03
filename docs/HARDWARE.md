@@ -87,6 +87,8 @@ Lines are mapped on the hardware worker channel (same as `POST /api/v1/access/ha
 
 Manual test: `.\scripts\send-hw-tcp.ps1 -CredentialUid DEMO-0002`
 
+Before pilot: with API running, `npm run verify:doors` prints door UUIDs and `reader_id` values for bridge configuration.
+
 ## Simulator readers (seed)
 
 | `reader_id` | Role |
