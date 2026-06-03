@@ -27,7 +27,11 @@ if (-not $SkipNpmInstall -and -not (Test-Path "$RepoRoot\node_modules")) {
 Write-Host ""
 Write-Host "Starting TimeShards Server (Tauri dev)..."
 Write-Host "  API:     http://127.0.0.1:47821"
-Write-Host "  Login:   admin / admin"
+if ($env:TIMESHARDS_DISABLE_DEMO -eq "1") {
+    Write-Host "  Login:   admin + TIMESHARDS_ADMIN_PASSWORD (demo off)"
+} else {
+    Write-Host "  Login:   admin / admin"
+}
 Write-Host "  HW:      optional TIMESHARDS_HW_ADAPTER / TIMESHARDS_HW_TCP_ADDR (see .env.example)"
 Write-Host "  Stop:    Ctrl+C in this window"
 Write-Host ""

@@ -7,6 +7,7 @@ Germany-first desktop **time tracking + access control** (Primion-inspired). Onl
 ```powershell
 cd m:\Data\Projects\ai_timeshards
 .\scripts\start_all.ps1          # server window + client
+.\scripts\start-pilot.ps1        # pilot env (TIMESHARDS_ADMIN_PASSWORD); npm run start:pilot
 .\scripts\smoke-test.ps1        # API health + login (server must run)
 npm run smoke                   # smoke-test.ps1 (server must run)
 npm run smoke:api               # headless API + smoke (no Tauri)

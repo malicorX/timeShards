@@ -12,7 +12,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host ""
 Write-Host "=== Go-live checklist (see docs/PILOT.md) ===" -ForegroundColor Cyan
 Write-Host "  1. Set TIMESHARDS_DISABLE_DEMO=1 and TIMESHARDS_ADMIN_PASSWORD on the server"
-Write-Host "  2. Start API or Server app; complete Go-Live-Assistent on Übersicht"
+Write-Host "  2. npm run start:pilot or api:pilot; complete Go-Live-Assistent (Uebersicht tab)"
 Write-Host "  3. Personal + Perioden + Zutritt master data; run Zeitbasis reparieren if KPIs warn"
 Write-Host "  4. Trial week: client clocking, manager approvals, Zeit-Zutritt KPI = 0"
 Write-Host "  5. Month-end: Monatsabschluss + Lohn-/Abwesenheiten-CSV"
