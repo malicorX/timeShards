@@ -1,0 +1,37 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node
+node_modules/
+dist/
+.svelte-kit/
+
+# Tauri
+apps/*/src-tauri/target/
+apps/*/src-tauri/WixTools/
+apps/*/src-tauri/gen/
+
+# Env & local data
+.env
+.env.*
+!.env.example
+*.db
+*.db-*
+.data/
+
+# PrimeWeb reference PDFs (local only — copyright / size)
+docs/p*.pdf
+
+# Agent brainstorm sessions (local)
+.superpowers/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

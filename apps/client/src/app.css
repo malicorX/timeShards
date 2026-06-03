@@ -1,0 +1,185 @@
+:root {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #e8eaed;
+  background: #12141a;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  background: #3d6cf5;
+  color: #fff;
+}
+
+button.secondary {
+  background: #2a2f3d;
+}
+
+input {
+  border: 1px solid #3a4050;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  background: #1a1e28;
+  color: inherit;
+  width: 100%;
+}
+
+.card {
+  background: #1a1e28;
+  border: 1px solid #2a3142;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: #0e1016;
+  border-right: 1px solid #2a3142;
+  padding: 1.25rem 1rem;
+}
+
+.sidebar h1 {
+  font-size: 1rem;
+  margin: 0 0 1rem;
+  color: #9fb0ff;
+}
+
+.nav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 0.35rem;
+  background: transparent;
+  color: #c5cad6;
+}
+
+.nav button.active {
+  background: #243056;
+  color: #fff;
+}
+
+.nav button {
+  position: relative;
+}
+
+.nav-badge {
+  display: inline-block;
+  min-width: 1.1rem;
+  margin-left: 0.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #c45c2a;
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1.25rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.nav-badge.draft {
+  background: #4a5a8a;
+}
+
+.content {
+  padding: 1.25rem 1.5rem;
+}
+
+.muted {
+  color: #8b93a7;
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #ff8f8f;
+}
+
+.success {
+  color: #7ddea2;
+}
+
+.grid-form {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 400px;
+}
+
+.row-card {
+  border-top: 1px solid #2a3142;
+  padding: 0.75rem 0;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.week-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+}
+
+.day-col {
+  background: #12151f;
+  border: 1px solid #2a3142;
+  border-radius: 8px;
+  padding: 0.35rem;
+  min-height: 60px;
+}
+
+.day-col h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.65rem;
+  color: #9fb0ff;
+}
+
+.shift-chip {
+  font-size: 0.65rem;
+  padding: 0.2rem;
+  background: #243056;
+  border-radius: 4px;
+}
+
+.shift-chip.planned {
+  background: #4a3a10;
+  border: 1px solid #b8860b;
+}
+
+.shift-chip.published {
+  background: #1e3a2f;
+  border: 1px solid #3d9a6a;
+}
+
+.shift-chip.cancelled {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.compact-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: #8b93a7;
+}

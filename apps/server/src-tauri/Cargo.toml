@@ -1,0 +1,26 @@
+[package]
+name = "timeshards-server"
+version.workspace = true
+edition.workspace = true
+description = "AI TimeShards configuration server"
+
+[lib]
+name = "timeshards_server_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+timeshards-api = { workspace = true }
+timeshards-db = { workspace = true }
+timeshards-hardware = { workspace = true }
+timeshards-kernel = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

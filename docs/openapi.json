@@ -1,0 +1,358 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AI TimeShards API",
+    "version": "0.1.0",
+    "description": "REST API for time tracking and access control. Narrative reference: docs/API.md. Machine-readable spec served at GET /api/v1/openapi.json."
+  },
+  "servers": [{ "url": "http://127.0.0.1:47821", "description": "Default local bind" }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Token from POST /api/v1/auth/login"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "degraded"] },
+          "service": { "type": "string" },
+          "version": { "type": "string" },
+          "database": { "type": "string", "enum": ["ok", "error"] },
+          "demo_seeding_enabled": { "type": "boolean" },
+          "default_password_login_blocked": { "type": "boolean" },
+          "hardware_adapter": { "type": "string", "enum": ["sim", "external"] },
+          "hardware_adapter_configured": {
+            "type": "string",
+            "nullable": true,
+            "description": "Present when env adapter is invalid but server runs sim"
+          },
+          "hardware_tcp_listen": {
+            "type": "string",
+            "nullable": true,
+            "description": "External adapter TCP listen address when TIMESHARDS_HW_TCP_ADDR is set"
+          },
+          "time_foundation": {
+            "$ref": "#/components/schemas/TimeFoundationHealth"
+          }
+        }
+      },
+      "TimeFoundationHealth": {
+        "type": "object",
+        "properties": {
+          "workday_models": { "type": "integer" },
+          "work_calendars": { "type": "integer" },
+          "active_employees": { "type": "integer" },
+          "employees_without_work_calendar": { "type": "integer" },
+          "current_week_drafts_without_soll": {
+            "type": "integer",
+            "description": "Current Berlin week: draft/rejected without Soll or missing row"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string", "format": "password" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "security": [],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service and database status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/openapi.json": {
+      "get": {
+        "security": [],
+        "summary": "OpenAPI document (this file)"
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "security": [],
+        "summary": "Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Bearer token and user summary" },
+          "401": { "description": "Invalid credentials", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Default password blocked (production/staging env)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": { "summary": "Current user" }
+    },
+    "/api/v1/me/work-summary": {
+      "get": {
+        "summary": "Clock status, work_calendar_assigned, flex_balance_minutes, current_week (auto-rebuild draft if assigned), draft/pending counts"
+      }
+    },
+    "/api/v1/admin/dashboard": {
+      "get": {
+        "summary": "KPIs, door alerts, occupancy, employees_without_work_calendar, timesheets_current_week_no_soll"
+      }
+    },
+    "/api/v1/admin/foundation-fix": {
+      "post": {
+        "summary": "Assign missing default work calendars and rebuild current calendar week for all employees"
+      }
+    },
+    "/api/v1/admin/employees/{id}/grant-work-calendar": {
+      "post": { "summary": "Assign wc-default-standard when employee has no active calendar" }
+    },
+    "/api/v1/admin/policy": {
+      "get": { "summary": "Active ArbZG-oriented limits (minutes)" }
+    },
+    "/api/v1/time/status": {
+      "get": { "summary": "Clock/break state for linked employee" }
+    },
+    "/api/v1/time/calendar-week": {
+      "get": {
+        "summary": "Berlin calendar week bounds (period_start, period_end); optional at= RFC3339"
+      }
+    },
+    "/api/v1/time/clock-in": {
+      "post": { "summary": "Clock in" }
+    },
+    "/api/v1/time/clock-out": {
+      "post": {
+        "summary": "Clock out (auto-rebuilds current-week timesheet; optional advisory or 400 if flex enforced)"
+      }
+    },
+    "/api/v1/time/break-start": {
+      "post": { "summary": "Start break" }
+    },
+    "/api/v1/time/break-end": {
+      "post": { "summary": "End break" }
+    },
+    "/api/v1/time/clocked-in": {
+      "get": { "summary": "Employees currently on clock" }
+    },
+    "/api/v1/time/events": {
+      "get": {
+        "summary": "Punch list",
+        "parameters": [
+          { "name": "employee_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ]
+      }
+    },
+    "/api/v1/time/timesheets": {
+      "get": {
+        "summary": "List timesheets (includes expected_minutes, balance_minutes, evaluation)",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "pending", "approved", "rejected"] } },
+          { "name": "employee_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "period_start", "in": "query", "schema": { "type": "string", "format": "date-time" } }
+        ]
+      }
+    },
+    "/api/v1/time/workday-models": {
+      "get": { "summary": "List workday models (Tagesperiode)" },
+      "post": { "summary": "Create workday model" }
+    },
+    "/api/v1/time/workday-models/{id}": {
+      "put": { "summary": "Update workday model; config change rebuilds affected calendars" }
+    },
+    "/api/v1/time/work-calendars": {
+      "get": { "summary": "List work calendars (Jahresperiode)" }
+    },
+    "/api/v1/time/work-calendars/{id}/days": {
+      "get": {
+        "summary": "Calendar days in range",
+        "parameters": [
+          { "name": "from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } }
+        ]
+      }
+    },
+    "/api/v1/time/work-calendars/{id}/days/{date}": {
+      "put": { "summary": "Set workday model for one date (YYYY-MM-DD)" }
+    },
+    "/api/v1/time/work-calendars/{id}/generate-year": {
+      "post": { "summary": "Fill Mo–Fr / weekend pattern for a year" }
+    },
+    "/api/v1/time/employee-work-assignments": {
+      "get": { "summary": "List employee calendar assignments" },
+      "post": { "summary": "Assign work calendar to employee" }
+    },
+    "/api/v1/time/settlement-rules": {
+      "get": { "summary": "List settlement rules with config" }
+    },
+    "/api/v1/time/settlement-rules/{id}": {
+      "put": { "summary": "Update settlement rule config (enforce_flex_band, etc.)" }
+    },
+    "/api/v1/time/work-rotation-plans": {
+      "get": { "summary": "List shift rotation plans (Umschaltplan)" }
+    },
+    "/api/v1/time/work-calendars/{id}/rotation": {
+      "put": { "summary": "Attach or clear rotation plan on calendar" }
+    },
+    "/api/v1/time/work-calendars/{id}/copy-days": {
+      "post": { "summary": "Copy calendar day models to another date range" }
+    },
+    "/api/v1/time/settlement-periods/preview": {
+      "get": { "summary": "Monthly settlement preview for employee" }
+    },
+    "/api/v1/time/settlement-periods": {
+      "get": { "summary": "List closed monthly settlement periods" },
+      "post": { "summary": "Close month for employee (posts Konten reconciliation if needed)" }
+    },
+    "/api/v1/time/timesheets/rebuild": {
+      "post": {
+        "summary": "Rebuild timesheets from punches",
+        "parameters": [
+          { "name": "week_start", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "ISO Monday of target week" }
+        ]
+      }
+    },
+    "/api/v1/time/timesheets/approve-pending": {
+      "post": { "summary": "Approve all pending timesheets" }
+    },
+    "/api/v1/time/timesheets/submit-drafts": {
+      "post": { "summary": "Submit all draft/rejected timesheets" }
+    },
+    "/api/v1/absences": {
+      "get": {
+        "summary": "List absence requests",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "employee_id", "in": "query", "schema": { "type": "string" } }
+        ]
+      },
+      "post": { "summary": "Create absence request" }
+    },
+    "/api/v1/absences/approve-pending": {
+      "post": { "summary": "Approve all pending absences" }
+    },
+    "/api/v1/access/events": {
+      "get": {
+        "summary": "Recent access events (scoped by role)",
+        "parameters": [
+          { "name": "decision", "in": "query", "schema": { "type": "string", "enum": ["grant", "deny"] } },
+          { "name": "since", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "Only events after this RFC3339 time" },
+          { "name": "employee_no", "in": "query", "schema": { "type": "string" }, "description": "Filter by personnel number (team view)" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 500 } }
+        ]
+      }
+    },
+    "/api/v1/access/me": {
+      "get": { "summary": "Own badges and recent access events" }
+    },
+    "/api/v1/access/me/simulate-scan": {
+      "post": {
+        "summary": "Simulate badge scan (single event)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["credential_uid", "reader_id"],
+                "properties": {
+                  "credential_uid": { "type": "string", "example": "DEMO-0002" },
+                  "reader_id": { "type": "string", "example": "sim.reader.main" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/access/simulate-scan": {
+      "post": { "summary": "Admin simulate scan (same processing as /me)" }
+    },
+    "/api/v1/access/hardware-present": {
+      "post": {
+        "summary": "Queue credential on hardware channel (physical reader path)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["credential_uid", "reader_id"],
+                "properties": {
+                  "credential_uid": { "type": "string" },
+                  "reader_id": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event queued for worker processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "queued": { "type": "boolean" },
+                    "reader_id": { "type": "string" },
+                    "credential_uid": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/access/occupancy": {
+      "get": { "summary": "Per-zone occupancy" }
+    },
+    "/api/v1/reports/timesheets/export": {
+      "get": {
+        "summary": "Export timesheets (CSV or HTML)",
+        "parameters": [
+          { "name": "format", "in": "query", "schema": { "type": "string", "enum": ["csv", "html"], "default": "csv" } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "period_start", "in": "query", "schema": { "type": "string", "format": "date-time" } }
+        ]
+      }
+    },
+    "/api/v1/reports/access/export": {
+      "get": {
+        "summary": "Export access log (CSV or HTML)",
+        "parameters": [
+          { "name": "format", "in": "query", "schema": { "type": "string", "enum": ["csv", "html"], "default": "csv" } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 2000 } }
+        ]
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }]
+}

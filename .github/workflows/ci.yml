@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  rust:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt
+      - name: cargo check
+        run: cargo check --workspace
+      - name: hardware unit tests
+        run: cargo test -p timeshards-hardware
+      - name: timeshards-db tests
+        run: cargo test -p timeshards-db
+
+  frontend:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run check -w @timeshards/server
+      - run: npm run check -w @timeshards/client
+
+  smoke:
+    runs-on: windows-latest
+    needs: [rust]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: API smoke test
+        run: npm run smoke:api
+
+  smoke-production:
+    runs-on: windows-latest
+    needs: [rust]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Production-mode smoke
+        run: npm run smoke:production
+
+  smoke-strict:
+    runs-on: windows-latest
+    needs: [rust]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Strict default-password smoke
+        run: npm run smoke:strict
+
+  smoke-hw-external:
+    runs-on: windows-latest
+    needs: [rust]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: External hardware adapter smoke
+        run: npm run smoke:hw-external
+
+  smoke-hw-unknown:
+    runs-on: windows-latest
+    needs: [rust]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Invalid HW adapter falls back to sim
+        run: npm run smoke:hw-unknown

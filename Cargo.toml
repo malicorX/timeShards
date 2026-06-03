@@ -1,0 +1,43 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/timeshards-core",
+    "crates/timeshards-kernel",
+    "crates/timeshards-db",
+    "crates/timeshards-api",
+    "crates/timeshards-hardware",
+    "apps/server/src-tauri",
+    "apps/client/src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["AI TimeShards"]
+
+[workspace.dependencies]
+anyhow = "1"
+async-trait = "0.1"
+axum = { version = "0.8", features = ["macros"] }
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono", "uuid", "migrate"] }
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+argon2 = "0.5"
+rand_core = { version = "0.6", features = ["std"] }
+
+timeshards-core = { path = "crates/timeshards-core" }
+timeshards-kernel = { path = "crates/timeshards-kernel" }
+timeshards-db = { path = "crates/timeshards-db" }
+timeshards-api = { path = "crates/timeshards-api" }
+timeshards-hardware = { path = "crates/timeshards-hardware" }
