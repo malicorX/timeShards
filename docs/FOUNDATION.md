@@ -62,9 +62,11 @@ flowchart TB
 | **Tagesmodell PUT** | Config change → rebuild all calendars referencing that model |
 | **UI Server** | Zeit tab: `WorkCalendarCard` (Kalender + Tagesmodell bearbeiten), `ShiftWeekCard`, `TimesheetsCard`, `TimeSettlementCard` |
 | **Neuer MA** | `POST /admin/employees` mit `grant_work_calendar` (default) → Standard-Arbeitskalender + Rebuild |
-| **Dashboard** | `employees_without_work_calendar`, `timesheets_current_week_no_soll`; **`POST /admin/foundation-fix`** (ein Klick: Kalender + KW-Rebuild) |
-| **Personnel** | `work_calendar_assigned` pro MA; Filter „Nur ohne Arbeitskalender“; `grant-work-calendar` |
-| **UI Client** | `ClientTimePillar` (Stempeln, KW, Stundenzettel), `ClientApprovalsPillar` (Freigaben) |
+| **Dashboard** | `employees_without_work_calendar`, `timesheets_current_week_no_soll`, **`time_access_mismatch_count`** / `time_access_mismatches[]`; **`POST /admin/foundation-fix`** |
+| **Personnel** | `work_calendar_assigned` pro MA; Filter „ohne Arbeitskalender“; `grant-work-calendar` |
+| **Reports** | Timesheet **HTML** export with **Tagesdetails** from `evaluation_json`; **Lohn-CSV** (`GET /reports/payroll/export`, Berlin month bounds) |
+| **Go-Live** | `ProductionChecklistCard` + **`ProductionWizard`** on Übersicht; [PRODUCTION.md](./PRODUCTION.md) |
+| **UI Client** | Pillars: Zeit, Freigaben, Abwesenheit, Zutritt, Konto; `ClientAppShell`, login/settings views |
 
 ## Calendar week boundary
 

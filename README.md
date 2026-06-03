@@ -33,6 +33,8 @@ Clients are **online-first**: they call the server API (`http://<host>:47821` by
 - **[docs/API.md](docs/API.md)** — REST API reference
 - **[docs/TIME_MODEL.md](docs/TIME_MODEL.md)** — work calendars, Soll/Ist evaluation
 - **[docs/FOUNDATION.md](docs/FOUNDATION.md)** — time-model foundation status
+- **[docs/PRODUCTION.md](docs/PRODUCTION.md)** — production go-live (env, checklist, verify)
+- **[docs/FOUNDATION_CHECKLIST.md](docs/FOUNDATION_CHECKLIST.md)** — admin checklist for Kalender/Soll
 - **[docs/openapi.json](docs/openapi.json)** — OpenAPI 3.0 subset (live: `GET /api/v1/openapi.json`)
 - **[docs/HARDWARE.md](docs/HARDWARE.md)** — hardware gateway and reader integration
 - **[docs/README.md](docs/README.md)** — documentation index
@@ -164,9 +166,11 @@ Seeded on first run: site **Hauptstandort**, zone **Büro**, door **Haupteingang
 - `ROADMAP.md` / `ROADMAP_DETAILS.md` — product vision
 - `deep-research-report*.md` — research and build specs
 
-## Next steps
+## Next steps (post v1 foundation)
 
 - PostgreSQL option for multi-site central DB
-- Rich admin CRUD (employees, schedules, permission editor)
-- Real hardware adapters behind `HardwareGateway`
+- DATEV bridge (Lohn-CSV export exists as interim)
+- Full-year calendar editor beyond KW copy + generate-year
+- Automatic stamp ↔ building access sync (process + KPI today)
+- Production hardware adapters behind `HardwareGateway`
 - Mobile / SaaS (later)

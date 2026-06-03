@@ -7,13 +7,14 @@
 | [TIME_MODEL.md](./TIME_MODEL.md) | Work calendars, Tagesmodelle, evaluation (Soll/Ist) |
 | [FOUNDATION.md](./FOUNDATION.md) | What is implemented vs planned for the time base |
 | [FOUNDATION_CHECKLIST.md](./FOUNDATION_CHECKLIST.md) | Admin go-live checklist (Kalender, Soll, repair) |
+| [PRODUCTION.md](./PRODUCTION.md) | Production deploy (env vars, Go-Live, verify) |
 | [openapi.json](./openapi.json) | OpenAPI 3.0 subset (`GET /api/v1/openapi.json` when server runs) |
 | [HARDWARE.md](./HARDWARE.md) | Simulator vs real readers, adapter rules |
-
-PrimeWeb reference PDFs (`docs/pWA_*.pdf`, `pWM_*.pdf`, `pWT_*.pdf`) are **not in git** — keep them locally for design reference only.
 | [../README.md](../README.md) | Project overview |
 | [../ROADMAP.md](../ROADMAP.md) | Product direction (high level) |
 | [../ROADMAP_DETAILS.md](../ROADMAP_DETAILS.md) | Detailed vision and modules |
+
+PrimeWeb reference PDFs (`docs/pWA_*.pdf`, `pWM_*.pdf`, `pWT_*.pdf`) are **not in git** — keep them locally for design reference only.
 
 ## Helper scripts (Windows)
 
