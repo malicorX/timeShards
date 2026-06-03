@@ -7,6 +7,7 @@
   import ProductionWizard from './ProductionWizard.svelte';
   import SetupGuideCard from './SetupGuideCard.svelte';
   import { checklistAllOk, computeProductionChecklist } from '../lib/productionChecklist';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
 
   export type OverviewNavigate = {
     tab: 'time' | 'absence' | 'access' | 'personnel';
@@ -123,7 +124,10 @@
   });
 </script>
 
-<h2>Server-Übersicht</h2>
+<TsPageHeader
+  title="Server-Übersicht"
+  lead="KPIs, Go-Live-Checkliste und Schnellzugriff auf Zeit, Personal und Zutritt."
+/>
 {#if user}
   <button class="secondary" style="margin-top: 0.5rem;" type="button" onclick={onRefreshAll}>
     Aktualisieren

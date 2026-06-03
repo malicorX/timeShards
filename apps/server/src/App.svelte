@@ -12,6 +12,7 @@
   import AccessTab from './components/AccessTab.svelte';
   import SystemTab from './components/SystemTab.svelte';
   import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
+  import TsFlash from '@timeshards/shared/ui/TsFlash.svelte';
 
   type Tab = 'overview' | 'personnel' | 'time' | 'absence' | 'access' | 'system';
   type TimeSection = 'stammdaten' | 'planung' | 'stundenzettel' | 'abschluss';
@@ -537,7 +538,7 @@
         onRefreshHealth={refreshHealth}
       />
     {/if}
-    {#if error}<p class="error">{error}</p>{/if}
-    {#if success}<p class="success">{success}</p>{/if}
+    <TsFlash type="error" message={error} onDismiss={() => (error = '')} />
+    <TsFlash type="success" message={success} onDismiss={() => (success = '')} />
   </main>
 </div>

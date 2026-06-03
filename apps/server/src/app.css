@@ -405,6 +405,55 @@ label.muted {
   margin-top: 0.15rem;
 }
 
+.year-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.year-month h5 {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  color: #9fb0ff;
+}
+
+.month-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.month-mini-cell {
+  font-size: 0.65rem;
+  line-height: 1.2;
+  padding: 2px 0;
+  text-align: center;
+  border-radius: 3px;
+  min-height: 1.25rem;
+}
+
+.month-mini-cell.pad {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.month-mini-cell.has-day {
+  background: #1e2433;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.month-mini-cell.has-day:hover {
+  border-color: #3d6cf5;
+}
+
+.month-mini-cell.has-day.selected {
+  background: #243056;
+  border-color: #3d6cf5;
+}
+
 .period-editor-pane .editor-grid,
 .card-inner .editor-grid {
   display: grid;

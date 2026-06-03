@@ -2,6 +2,7 @@
   import { api, getToken } from '../lib/api';
   import { formatIsoLocalShort, fromLocalDatetimeInputValue, toLocalDatetimeInputValue } from '../lib/datetime';
   import { statusLabel } from '../lib/statusLabels';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
 
   type Employee = {
     id: string;
@@ -165,7 +166,10 @@
   }
 </script>
 
-<h2>Abwesenheit</h2>
+<TsPageHeader
+  title="Abwesenheit"
+  lead="Anträge stellen, freigeben oder ablehnen. Konfliktprüfung vor dem Absenden."
+/>
 <div class="card" style="margin-top: 1rem;">
   <h3>Neuer Antrag</h3>
   <div class="grid-form">

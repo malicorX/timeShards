@@ -10,6 +10,7 @@
   import ClientAppShell from './components/ClientAppShell.svelte';
   import ClientLoginView from './components/ClientLoginView.svelte';
   import ClientSettingsView from './components/ClientSettingsView.svelte';
+  import TsFlash from '@timeshards/shared/ui/TsFlash.svelte';
 
   type View = 'settings' | 'login' | 'app';
   type Pillar = 'time' | 'absence' | 'approvals' | 'access' | 'account';
@@ -237,7 +238,7 @@
         onServerUrlSaved={() => (view = 'login')}
       />
     {/if}
-    {#if error}<p class="error">{error}</p>{/if}
-    {#if success}<p class="success">{success}</p>{/if}
+    <TsFlash type="error" message={error} onDismiss={() => (error = '')} />
+    <TsFlash type="success" message={success} onDismiss={() => (success = '')} />
   </ClientAppShell>
 {/if}

@@ -1,6 +1,8 @@
 <script lang="ts">
   import { api } from '../lib/api';
   import type { LoginResponse } from '../lib/api';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
+  import TsEmptyState from '@timeshards/shared/ui/TsEmptyState.svelte';
 
   type Employee = {
     id: string;
@@ -61,6 +63,7 @@
   let editingEmployeeId = $state('');
   let editDisplayName = $state('');
   let editOrgUnit = $state('');
+  let selectedEmployeeId = $state('');
 
   const displayedEmployees = $derived(
     employees.filter((e) => {
@@ -76,6 +79,10 @@
 
   const usersWithoutEmployee = $derived(
     users.filter((u) => !employees.some((e) => e.user_id === u.id)),
+  );
+
+  const selectedEmployee = $derived(
+    displayedEmployees.find((e) => e.id === selectedEmployeeId) ?? null,
   );
 
   function notify(type: 'error' | 'success', text: string) {
@@ -116,7 +123,23 @@
       '/api/v1/access/rules',
     ).catch(() => []);
     onDataChange?.(employees);
+    if (
+      displayedEmployees.length &&
+      !displayedEmployees.some((e) => e.id === selectedEmployeeId)
+    ) {
+      selectedEmployeeId = displayedEmployees[0].id;
+    }
   }
+
+  $effect(() => {
+    if (!active) return;
+    if (
+      displayedEmployees.length &&
+      !displayedEmployees.some((e) => e.id === selectedEmployeeId)
+    ) {
+      selectedEmployeeId = displayedEmployees[0].id;
+    }
+  });
 
   $effect(() => {
     if (active && user) void refresh();
@@ -341,7 +364,10 @@
   }
 </script>
 
-<h2>Personal</h2>
+<TsPageHeader
+  title="Personal"
+  lead="Benutzer und Mitarbeiter. In der Liste wählen, dann Badge, Zutritt und Kalender zuweisen."
+/>
 <div class="grid-form" style="margin-top: 0.75rem; max-width: 480px;">
   <input
     bind:value={personnelSearch}
@@ -427,75 +453,130 @@
     </label>
     <button type="button" onclick={createEmployee}>Mitarbeiter anlegen</button>
   </div>
-  <ul class="compact-list" style="margin-top: 0.75rem;">
-    {#each displayedEmployees as e}
-      <li class="row-card">
-        {#if editingEmployeeId === e.id}
-          <div class="grid-form">
-            <input bind:value={editDisplayName} placeholder="Anzeigename" />
-            <input bind:value={editOrgUnit} placeholder="Organisation" />
-            <button type="button" onclick={() => saveEmployeeEdit(e.id)}>Speichern</button>
-            <button class="secondary" type="button" onclick={cancelEditEmployee}>Abbrechen</button>
-          </div>
-        {:else}
-          {e.employee_no} — {e.display_name}
-          {#if e.org_unit}<span class="muted"> ({e.org_unit})</span>{/if}
-          {#if e.active !== false && e.work_calendar_assigned === false}
-            <span class="error" style="font-size: 0.85rem;"> · Kein Arbeitskalender</span>
-          {/if}
-          <button class="secondary" type="button" onclick={() => startEditEmployee(e)}>Bearbeiten</button>
-          {#if e.active !== false && e.work_calendar_assigned === false}
-            <button class="secondary" type="button" onclick={() => grantWorkCalendarForEmployee(e.id)}>
-              Arbeitskalender
-            </button>
-          {/if}
-          {#if e.active !== false && !employeeHasActiveBadge(e.id)}
-            <button class="secondary" type="button" onclick={() => issueBadgeForEmployee(e)}>
-              Badge ausstellen
-            </button>
-          {/if}
-          {#if e.active !== false && !employeeHasZoneAllow(e.id)}
-            <button class="secondary" type="button" onclick={() => grantZoneAccessForEmployee(e.id)}>
-              Zutritt Büro
-            </button>
-          {/if}
-          {#if e.active !== false && (!employeeHasActiveBadge(e.id) || !employeeHasZoneAllow(e.id))}
-            <button class="secondary" type="button" onclick={() => setupEmployeeAccess(e)}>
-              Badge + Zutritt
-            </button>
-          {/if}
-          {#if e.active === false}
-            <span class="muted"> (inaktiv)</span>
-            <button class="secondary" type="button" onclick={() => reactivateEmployee(e.id)}>Reaktivieren</button>
-          {:else if e.username}
-            <span class="muted"> — Login: <code>{e.username}</code></span>
-            <button class="secondary" type="button" onclick={() => unlinkEmployeeUser(e.id)}>Login trennen</button>
-            <button class="secondary" type="button" onclick={() => deactivateEmployee(e.id)}>Deaktivieren</button>
-          {:else}
-            <select
-              bind:value={linkUserByEmployee[e.id]}
-              onchange={(ev) => {
-                linkUserByEmployee = { ...linkUserByEmployee, [e.id]: ev.currentTarget.value };
+  {#if displayedEmployees.length === 0}
+    <TsEmptyState
+      message={personnelShowSetupOpen
+        ? 'Keine Mitarbeiter ohne Badge oder Zutritt — alles eingerichtet.'
+        : 'Keine Mitarbeiter in der Liste — Suche oder Filter anpassen.'}
+    />
+  {:else}
+    <div class="period-split" style="margin-top: 0.75rem;">
+      <ul class="pick-list" role="listbox" aria-label="Mitarbeiter">
+        {#each displayedEmployees as e}
+          <li>
+            <button
+              type="button"
+              class="pick-item"
+              class:selected={selectedEmployeeId === e.id}
+              role="option"
+              aria-selected={selectedEmployeeId === e.id}
+              onclick={() => {
+                selectedEmployeeId = e.id;
+                if (editingEmployeeId && editingEmployeeId !== e.id) cancelEditEmployee();
               }}
             >
-              <option value="">Benutzer wählen…</option>
-              {#each usersWithoutEmployee as u}
-                <option value={u.id}>{u.username} — {u.display_name}</option>
-              {/each}
-            </select>
-            <button class="secondary" type="button" onclick={() => linkEmployeeUser(e.id)}>Verknüpfen</button>
-            <button class="secondary" type="button" onclick={() => deactivateEmployee(e.id)}>Deaktivieren</button>
+              <span class="pick-title">{e.employee_no} — {e.display_name}</span>
+              <span class="pick-meta">
+                {#if e.active === false}
+                  inaktiv
+                {:else if e.work_calendar_assigned === false}
+                  ohne Arbeitskalender
+                {:else if !employeeHasActiveBadge(e.id) || !employeeHasZoneAllow(e.id)}
+                  Setup offen
+                {:else}
+                  aktiv
+                {/if}
+              </span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+      <div class="period-editor-pane">
+        {#if selectedEmployee}
+          {@const e = selectedEmployee}
+          <h4 style="margin: 0 0 0.35rem;">{e.display_name}</h4>
+          <p class="muted" style="margin: 0 0 0.75rem;">
+            <code>{e.employee_no}</code>
+            {#if e.org_unit} · {e.org_unit}{/if}
+            {#if e.active !== false && e.work_calendar_assigned === false}
+              <span class="error" style="font-size: 0.85rem;"> · Kein Arbeitskalender</span>
+            {/if}
+          </p>
+          {#if editingEmployeeId === e.id}
+            <div class="grid-form">
+              <input bind:value={editDisplayName} placeholder="Anzeigename" />
+              <input bind:value={editOrgUnit} placeholder="Organisation" />
+              <button type="button" onclick={() => saveEmployeeEdit(e.id)}>Speichern</button>
+              <button class="secondary" type="button" onclick={cancelEditEmployee}>Abbrechen</button>
+            </div>
+          {:else}
+            <div class="btn-row" style="flex-wrap: wrap;">
+              <button class="secondary" type="button" onclick={() => startEditEmployee(e)}>Bearbeiten</button>
+              {#if e.active !== false && e.work_calendar_assigned === false}
+                <button
+                  class="secondary"
+                  type="button"
+                  onclick={() => grantWorkCalendarForEmployee(e.id)}
+                >
+                  Arbeitskalender
+                </button>
+              {/if}
+              {#if e.active !== false && !employeeHasActiveBadge(e.id)}
+                <button class="secondary" type="button" onclick={() => issueBadgeForEmployee(e)}>
+                  Badge ausstellen
+                </button>
+              {/if}
+              {#if e.active !== false && !employeeHasZoneAllow(e.id)}
+                <button
+                  class="secondary"
+                  type="button"
+                  onclick={() => grantZoneAccessForEmployee(e.id)}
+                >
+                  Zutritt Büro
+                </button>
+              {/if}
+              {#if e.active !== false && (!employeeHasActiveBadge(e.id) || !employeeHasZoneAllow(e.id))}
+                <button class="secondary" type="button" onclick={() => setupEmployeeAccess(e)}>
+                  Badge + Zutritt
+                </button>
+              {/if}
+              {#if e.active === false}
+                <button class="secondary" type="button" onclick={() => reactivateEmployee(e.id)}>
+                  Reaktivieren
+                </button>
+              {:else if e.username}
+                <span class="muted">Login: <code>{e.username}</code></span>
+                <button class="secondary" type="button" onclick={() => unlinkEmployeeUser(e.id)}>
+                  Login trennen
+                </button>
+                <button class="secondary" type="button" onclick={() => deactivateEmployee(e.id)}>
+                  Deaktivieren
+                </button>
+              {:else}
+                <select
+                  bind:value={linkUserByEmployee[e.id]}
+                  onchange={(ev) => {
+                    linkUserByEmployee = { ...linkUserByEmployee, [e.id]: ev.currentTarget.value };
+                  }}
+                >
+                  <option value="">Benutzer wählen…</option>
+                  {#each usersWithoutEmployee as u}
+                    <option value={u.id}>{u.username} — {u.display_name}</option>
+                  {/each}
+                </select>
+                <button class="secondary" type="button" onclick={() => linkEmployeeUser(e.id)}>
+                  Verknüpfen
+                </button>
+                <button class="secondary" type="button" onclick={() => deactivateEmployee(e.id)}>
+                  Deaktivieren
+                </button>
+              {/if}
+            </div>
           {/if}
-        {/if}
-      </li>
-    {:else}
-      <li class="muted">
-        {#if personnelShowSetupOpen}
-          Keine Mitarbeiter ohne Badge oder Zutritt — alles eingerichtet.
         {:else}
-          Keine Mitarbeiter in der Liste.
+          <TsEmptyState message="Mitarbeiter in der Liste wählen." />
         {/if}
-      </li>
-    {/each}
-  </ul>
+      </div>
+    </div>
+  {/if}
 </div>

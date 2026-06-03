@@ -96,6 +96,44 @@ Manual test: `.\scripts\send-hw-tcp.ps1 -CredentialUid DEMO-0002`
 
 Demo credentials: `DEMO-ADMIN-001`, `DEMO-0002`, `DEMO-0003`.
 
+## Bridge deployment (pilot)
+
+Use this when one physical reader is forwarded over TCP into TimeShards (`TIMESHARDS_HW_ADAPTER=external`). A small **bridge** process on the site PC reads the vendor SDK or serial line and writes newline-delimited lines to the API listener.
+
+### Checklist
+
+1. **API** — Run headless or Tauri server with:
+   - `TIMESHARDS_HW_ADAPTER=external`
+   - `TIMESHARDS_HW_TCP_ADDR=127.0.0.1:47831` (or site LAN bind if the bridge runs on another host; firewall accordingly)
+2. **Doors in DB** — Admin → Zutritt: door has `reader_in_id` / `reader_out_id` matching what the bridge sends (seed uses `sim.reader.main` / `sim.reader.main.out` for demos).
+3. **Bridge** — Forwards only **one event per physical scan**; maps card UID to `credential_uid` and reader to `reader_id` exactly as configured.
+4. **Smoke** — With API up:
+   ```powershell
+   cd m:\Data\Projects\ai_timeshards
+   $env:TIMESHARDS_HW_ADAPTER = 'external'
+   $env:TIMESHARDS_HW_TCP_ADDR = '127.0.0.1:47831'
+   npm run api
+   # second shell:
+   .\scripts\send-hw-tcp.ps1 -CredentialUid DEMO-0002
+   ```
+   Poll `GET /api/v1/access/events?limit=5` — expect `grant` on first entry scan; second entry without exit → `deny` (anti-passback).
+5. **Health** — `GET /api/v1/health` shows `hardware_adapter: external` and `hardware_tcp_listen` when the listener is bound.
+6. **Restart** — After API restart, confirm bridge reconnects and door IDs in TCP `door;…` lines still match UUIDs in the DB (stale IDs fail silently in UI lists).
+
+### Fail-closed reminder
+
+Access without an explicit **Allow** rule for the employee’s zone is denied. Pilot sites should verify each employee has badge + zone rule (Personal → Setup or Zutritt → Regel) before go-live. Zones with no rules do not grant access.
+
+### Door state from bridge
+
+Optional lines update dashboard door status without a credential event:
+
+```text
+door;<door-uuid>;closed
+```
+
+See TCP ingest above for JSON equivalent.
+
 ## References
 
 - Trait: `crates/timeshards-hardware/src/gateway.rs`

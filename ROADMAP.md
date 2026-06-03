@@ -1,6 +1,6 @@
 # AI TimeShards — Product Roadmap (active)
 
-**Last updated:** 2026-06-03 · **Shipping line:** v0.2.x (time foundation + access simulation + payroll CSVs)
+**Last updated:** 2026-06-02 · **Shipping line:** v0.2.x (time foundation + access simulation + payroll CSVs)
 
 This is the **canonical plan** for what we build next. It reflects the **monolithic Axum API + two Tauri apps** in the repo today—not the optional micro-kernel experiment in `crates/timeshards-kernel`.
 
@@ -66,13 +66,13 @@ Treat as done unless a row is marked **partial**:
 | Item | Status | Owner doc |
 |------|--------|-----------|
 | Shared design tokens (`tokens.css`) | ✅ | `apps/shared/styles/` |
-| `TsCard` / `TsPageHeader` shared components | ✅ partial | `apps/shared/ui/` |
+| `TsCard` / `TsPageHeader` / `TsFlash` shared components | ✅ | `apps/shared/ui/` |
 | Perioden screen as reference (master–detail, tabs) | ✅ | `WorkCalendarCard` + Feiertage/Umschalt |
 | Overview KPIs → deep links | ✅ partial | `OverviewTab` |
 | Stundenzettel row → Tagesdetails | ✅ partial | `TimesheetsCard` |
 | Client Zeit pillar: status + Soll/Ist prominent | ✅ | `ClientTimePillar` hero |
-| Zutritt / Personal: pick-list + detail | ⬜ | Phase B–C |
-| Empty states + lead text on all main tabs | ⬜ | DoD in UI guide |
+| Zutritt / Personal: pick-list + detail | ✅ | `AccessTab`, `PersonnelTab` |
+| Empty states + lead text on all main tabs | ✅ partial | Headers on Personal/Zutritt/Abwesenheit/System/Zeit |
 
 **Exit:** UI guide Phase B checklist; no a11y warnings on new interactive patterns; 2–3 screenshot baselines for regression (optional).
 
@@ -90,7 +90,7 @@ Treat as done unless a row is marked **partial**:
 | Jahr befüllen + KW kopieren | ✅ | |
 | **Feiertagskalender** UI (link to Jahresperiode) | ✅ partial | Tab Feiertage + `PUT` link |
 | **Umschaltplan** editor (slots, not only assign) | ✅ partial | Tab Umschaltplan + `PUT …/slots` |
-| Full-year grid editor (beyond KW + generate-year) | ⬜ | PHASE2 track |
+| Full-year grid editor (beyond KW + generate-year) | ✅ partial | Jahresübersicht 12-Monats-Gitter |
 | `POST` / `PUT` work-calendars | ✅ | API + UI |
 
 **Exit:** New customer: admin creates 2 Tagesperioden, 1 Jahresperiode, fills year, assigns 3 MA—no server restart required.
@@ -105,9 +105,9 @@ Treat as done unless a row is marked **partial**:
 |------|--------|-------|
 | `sim` + `external` adapters | ✅ | |
 | TCP JSON + compact line + door state | ✅ | `smoke:hw-external` |
-| Document bridge deployment | ⬜ | Extend [HARDWARE.md](./docs/HARDWARE.md) |
+| Document bridge deployment | ✅ | [HARDWARE.md](./docs/HARDWARE.md) pilot section |
 | Pilot: one reader → one door mapping | ⬜ | Site-specific |
-| Fail-closed defaults review (zones without rules) | ⬜ | See GPT55 review notes |
+| Fail-closed defaults review (zones without rules) | ✅ partial | Documented in HARDWARE.md |
 
 **Exit:** 1-week pilot log; access events match physical tests; no silent bind failures on restart.
 

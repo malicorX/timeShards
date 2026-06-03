@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api } from '../lib/api';
   import { formatIsoLocalShort } from '../lib/datetime';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
 
   type UiMessage = { type: 'error' | 'success'; text: string };
 
@@ -88,7 +89,10 @@
   }
 </script>
 
-<h2>System</h2>
+<TsPageHeader
+  title="System"
+  lead="API-Status, Audit-Log, Standorte und eigenes Passwort. Produktion: Demo aus, starke Passwörter."
+/>
 <div class="card" style="margin-bottom: 1rem;">
   <h3>API-Status</h3>
   {#if apiHealth}

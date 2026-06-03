@@ -7,6 +7,8 @@
     formatIsoLocalShort,
   } from '../lib/datetime';
   import { doorStatusLabel, reasonLabel, accessDecisionLabel } from '../lib/accessLabels';
+  import TsPageHeader from '@timeshards/shared/ui/TsPageHeader.svelte';
+  import TsEmptyState from '@timeshards/shared/ui/TsEmptyState.svelte';
 
   type Employee = {
     id: string;
@@ -43,6 +45,7 @@
     onOccupancyChange?: (occupancy: ZoneOccupancy[]) => void;
   } = $props();
 
+  let selectedDoorId = $state('');
   let zones = $state<{ id: string; name: string; site_id: string }[]>([]);
   let doors = $state<
     {
@@ -121,6 +124,8 @@
     return out;
   });
 
+  const selectedDoor = $derived(doors.find((d) => d.id === selectedDoorId) ?? null);
+
   const displayedAccessRules = $derived(
     accessRules.filter((r) => {
       if (accessRuleEmployeeFilter && r.principal_id !== accessRuleEmployeeFilter) return false;
@@ -144,6 +149,9 @@
     if (!accessExportFrom) defaultAccessExportRange();
     zones = await api(apiUrl, '/api/v1/access/zones');
     doors = await api(apiUrl, '/api/v1/access/doors');
+    if (doors.length && !doors.some((d) => d.id === selectedDoorId)) {
+      selectedDoorId = doors[0].id;
+    }
     const readerIds: string[] = [];
     for (const d of doors) {
       if (d.reader_in_id) readerIds.push(d.reader_in_id);
@@ -463,7 +471,10 @@
   }
 </script>
 
-<h2>Zutritt</h2>
+<TsPageHeader
+  title="Zutritt"
+  lead="Zonen, Türen, Regeln und Simulator. Tür wählen, Status setzen, Scans testen."
+/>
 <div class="card" style="margin-top: 1rem;">
   <h3>Neue Zone</h3>
   <div class="grid-form">
@@ -586,28 +597,80 @@
 </div>
 <div class="card" style="margin-top: 1rem;">
   <h3>Türen</h3>
-  <ul class="compact-list">
-    {#each doors as d}
-      <li>
-        {d.name} — <em>{doorStatusLabel(d.status)}</em>
-        {#if d.reader_in_id || d.reader_out_id}
-          <p class="muted" style="font-size: 0.85rem; margin: 0.25rem 0;">
-            {#if d.reader_in_id}Eingang: <code>{d.reader_in_id}</code>{/if}
-            {#if d.reader_in_id && d.reader_out_id} · {/if}
-            {#if d.reader_out_id}Ausgang: <code>{d.reader_out_id}</code>{/if}
+  {#if doors.length === 0}
+    <TsEmptyState message="Noch keine Türen — oben Zone und Tür anlegen." />
+  {:else}
+    <div class="period-split" style="margin-top: 0.75rem;">
+      <ul class="pick-list" role="listbox" aria-label="Türen">
+        {#each doors as d}
+          <li>
+            <button
+              type="button"
+              class="pick-item"
+              class:selected={selectedDoorId === d.id}
+              role="option"
+              aria-selected={selectedDoorId === d.id}
+              onclick={() => (selectedDoorId = d.id)}
+            >
+              <span class="pick-title">{d.name}</span>
+              <span class="pick-meta">{doorStatusLabel(d.status)}</span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+      <div class="period-editor-pane">
+        {#if selectedDoor}
+          <h4 style="margin: 0 0 0.5rem;">{selectedDoor.name}</h4>
+          <p class="muted" style="margin: 0 0 0.75rem;">
+            Status: <strong>{doorStatusLabel(selectedDoor.status)}</strong>
           </p>
+          {#if selectedDoor.reader_in_id || selectedDoor.reader_out_id}
+            <p class="muted" style="font-size: 0.85rem; margin: 0 0 0.75rem;">
+              {#if selectedDoor.reader_in_id}
+                Eingang: <code>{selectedDoor.reader_in_id}</code>
+              {/if}
+              {#if selectedDoor.reader_in_id && selectedDoor.reader_out_id} · {/if}
+              {#if selectedDoor.reader_out_id}
+                Ausgang: <code>{selectedDoor.reader_out_id}</code>
+              {/if}
+            </p>
+          {/if}
+          <div class="btn-row">
+            <button
+              class="secondary"
+              type="button"
+              onclick={() => setDoorStatus(selectedDoor.id, 'closed')}
+            >
+              Zu
+            </button>
+            <button
+              class="secondary"
+              type="button"
+              onclick={() => setDoorStatus(selectedDoor.id, 'open')}
+            >
+              Auf
+            </button>
+            <button
+              class="secondary"
+              type="button"
+              onclick={() => setDoorStatus(selectedDoor.id, 'forced_open')}
+            >
+              Offen
+            </button>
+            <button
+              class="secondary"
+              type="button"
+              onclick={() => setDoorStatus(selectedDoor.id, 'alarm')}
+            >
+              Alarm
+            </button>
+          </div>
+        {:else}
+          <TsEmptyState message="Tür in der Liste wählen, um Status und Leser zu bearbeiten." />
         {/if}
-        <div class="btn-row">
-          <button class="secondary" type="button" onclick={() => setDoorStatus(d.id, 'closed')}>Zu</button>
-          <button class="secondary" type="button" onclick={() => setDoorStatus(d.id, 'open')}>Auf</button>
-          <button class="secondary" type="button" onclick={() => setDoorStatus(d.id, 'forced_open')}>
-            Offen
-          </button>
-          <button class="secondary" type="button" onclick={() => setDoorStatus(d.id, 'alarm')}>Alarm</button>
-        </div>
-      </li>
-    {/each}
-  </ul>
+      </div>
+    </div>
+  {/if}
 </div>
 <div class="card" style="margin-top: 1rem;">
   <h3>Simulator</h3>

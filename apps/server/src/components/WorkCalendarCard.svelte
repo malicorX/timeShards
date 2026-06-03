@@ -115,6 +115,25 @@
     part_time_percent: 100,
   });
   let dayEditModelId = $state('wm-std-8h');
+  let jahresSubView = $state<'week' | 'year'>('week');
+  let workCalendarYearDays = $state<
+    { date: string; workday_model_id: string; model_name: string }[]
+  >([]);
+
+  const MONTH_LABELS = [
+    'Jan',
+    'Feb',
+    'Mär',
+    'Apr',
+    'Mai',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Dez',
+  ];
 
   function toYmd(d: Date): string {
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -331,6 +350,42 @@
     }
   });
 
+  function monthGridCells(year: number, monthIndex: number) {
+    const first = new Date(year, monthIndex, 1);
+    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+    const startPad = (first.getDay() + 6) % 7;
+    const cells: ({ date: string; model_name: string } | null)[] = [];
+    for (let i = 0; i < startPad; i++) cells.push(null);
+    for (let d = 1; d <= lastDay; d++) {
+      const date = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const row = workCalendarYearDays.find((x) => x.date === date);
+      cells.push(
+        row
+          ? { date, model_name: row.model_name }
+          : { date, model_name: '—' },
+      );
+    }
+    return cells;
+  }
+
+  async function refreshWorkCalendarYearDays() {
+    if (!selectedWorkCalendarId) {
+      workCalendarYearDays = [];
+      return;
+    }
+    const from = `${calendarGenYear}-01-01`;
+    const to = `${calendarGenYear}-12-31`;
+    workCalendarYearDays = await api<typeof workCalendarYearDays>(
+      apiUrl,
+      `/api/v1/time/work-calendars/${selectedWorkCalendarId}/days?from=${from}&to=${to}`,
+    ).catch(() => []);
+  }
+
+  async function refreshJahresCalendarDays() {
+    if (jahresSubView === 'year') await refreshWorkCalendarYearDays();
+    else await refreshWorkCalendarWeekDays();
+  }
+
   async function refreshWorkCalendarWeekDays() {
     if (!selectedWorkCalendarId) {
       workCalendarDays = [];
@@ -392,8 +447,19 @@
         ? `/api/v1/time/employee-work-assignments?${assignQs}`
         : '/api/v1/time/employee-work-assignments',
     ).catch(() => []);
-    await refreshWorkCalendarWeekDays();
+    if (panel === 'jahres' && jahresSubView === 'year') {
+      await refreshWorkCalendarYearDays();
+    } else {
+      await refreshWorkCalendarWeekDays();
+    }
   }
+
+  $effect(() => {
+    if (!active || panel !== 'jahres' || jahresSubView !== 'year') return;
+    selectedWorkCalendarId;
+    calendarGenYear;
+    void refreshWorkCalendarYearDays();
+  });
 
   $effect(() => {
     if (active) {
@@ -471,7 +537,7 @@
           body: JSON.stringify({ workday_model_id: dayEditModelId }),
         },
       );
-      await refreshWorkCalendarWeekDays();
+      await refreshJahresCalendarDays();
       onWeekChange?.();
       notify('success', `Tag ${selectedDayDate} gespeichert`);
     } catch (e) {
@@ -552,7 +618,9 @@
 
   const activeEmployees = $derived(employees.filter((e) => e.active !== false));
   const selectedDay = $derived(
-    workCalendarDays.find((d) => d.date === selectedDayDate) ?? null,
+    workCalendarDays.find((d) => d.date === selectedDayDate) ??
+      workCalendarYearDays.find((d) => d.date === selectedDayDate) ??
+      null,
   );
 </script>
 
@@ -726,30 +794,93 @@
         </button>
       </div>
 
-      <div class="btn-row week-nav">
-        <button class="secondary" type="button" onclick={() => shiftWeek(-1)}>← KW</button>
-        <span class="muted">{weekLabelForAnchor(shiftWeekAnchor)}</span>
-        <button class="secondary" type="button" onclick={() => shiftWeek(1)}>KW →</button>
-        <button class="secondary" type="button" onclick={goToThisWeek}>Diese Woche</button>
+      <div class="btn-row" style="margin-top: 0.75rem;">
+        <button
+          type="button"
+          class:active={jahresSubView === 'week'}
+          onclick={() => {
+            jahresSubView = 'week';
+            void refreshWorkCalendarWeekDays();
+          }}
+        >
+          KW-Ansicht
+        </button>
+        <button
+          type="button"
+          class:active={jahresSubView === 'year'}
+          onclick={() => {
+            jahresSubView = 'year';
+            void refreshWorkCalendarYearDays();
+          }}
+        >
+          Jahresübersicht
+        </button>
       </div>
 
-      <div class="week-calendar period-week">
-        {#each workCalendarDays as d}
-          <button
-            type="button"
-            class="day-col day-col-btn"
-            class:selected={selectedDayDate === d.date}
-            onclick={() => selectCalendarDay(d)}
-          >
-            <span class="day-num">{d.date.slice(8, 10)}.{d.date.slice(5, 7)}</span>
-            <span class="shift-chip published">{d.model_name}</span>
+      {#if jahresSubView === 'week'}
+        <div class="btn-row week-nav">
+          <button class="secondary" type="button" onclick={() => shiftWeek(-1)}>← KW</button>
+          <span class="muted">{weekLabelForAnchor(shiftWeekAnchor)}</span>
+          <button class="secondary" type="button" onclick={() => shiftWeek(1)}>KW →</button>
+          <button class="secondary" type="button" onclick={goToThisWeek}>Diese Woche</button>
+        </div>
+
+        <div class="week-calendar period-week">
+          {#each workCalendarDays as d}
+            <button
+              type="button"
+              class="day-col day-col-btn"
+              class:selected={selectedDayDate === d.date}
+              onclick={() => selectCalendarDay(d)}
+            >
+              <span class="day-num">{d.date.slice(8, 10)}.{d.date.slice(5, 7)}</span>
+              <span class="shift-chip published">{d.model_name}</span>
+            </button>
+          {:else}
+            <p class="muted span-all">
+              Keine Tage in dieser Woche — Jahr befüllen oder andere KW wählen.
+            </p>
+          {/each}
+        </div>
+      {:else}
+        <div class="toolbar-row" style="margin-top: 0.75rem;">
+          <input type="number" bind:value={calendarGenYear} min="2020" max="2035" />
+          <button class="secondary" type="button" onclick={() => refreshWorkCalendarYearDays()}>
+            Jahr laden
           </button>
-        {:else}
-          <p class="muted span-all">
-            Keine Tage in dieser Woche — Jahr befüllen oder andere KW wählen.
-          </p>
-        {/each}
-      </div>
+        </div>
+        <div class="year-overview">
+          {#each MONTH_LABELS as label, monthIndex}
+            <div class="year-month">
+              <h5>{label} {calendarGenYear}</h5>
+              <div class="month-mini-grid" aria-label="{label} {calendarGenYear}">
+                {#each monthGridCells(calendarGenYear, monthIndex) as cell}
+                  {#if cell}
+                    <button
+                      type="button"
+                      class="month-mini-cell has-day"
+                      class:selected={selectedDayDate === cell.date}
+                      title="{cell.date}: {cell.model_name}"
+                      onclick={() => {
+                        selectedDayDate = cell.date;
+                        const row = workCalendarYearDays.find((d) => d.date === cell.date);
+                        if (row) dayEditModelId = row.workday_model_id;
+                      }}
+                    >
+                      {cell.date.slice(8, 10)}
+                    </button>
+                  {:else}
+                    <span class="month-mini-cell pad" aria-hidden="true"></span>
+                  {/if}
+                {/each}
+              </div>
+            </div>
+          {/each}
+        </div>
+        <p class="muted" style="margin-top: 0.5rem; font-size: 0.85rem;">
+          Tag anklicken, unten Tagesperiode zuweisen. Leere Zellen: Jahr befüllen (Erweitert).
+        </p>
+      {/if}
 
       {#if selectedDay}
         <div class="day-editor card-inner subtle">
