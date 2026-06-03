@@ -1,6 +1,6 @@
 # Produktivbetrieb — Go-Live
 
-Kurzer Leitfaden für den Einsatz **ohne Demo-Daten**. Englische Kurzversion Pilot: [PILOT.md](./PILOT.md). Technische Zeitbasis: [FOUNDATION.md](./FOUNDATION.md), Checkliste: [FOUNDATION_CHECKLIST.md](./FOUNDATION_CHECKLIST.md).
+Kurzer Leitfaden für den Einsatz **ohne Demo-Daten**. Pilot-Checkliste (eine Seite): [PILOT.md](./PILOT.md). Technische Zeitbasis: [FOUNDATION.md](./FOUNDATION.md), Checkliste: [FOUNDATION_CHECKLIST.md](./FOUNDATION_CHECKLIST.md).
 
 ## 1. Umgebungsvariablen
 
