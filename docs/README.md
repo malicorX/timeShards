@@ -14,6 +14,7 @@
 | [openapi.json](./openapi.json) | OpenAPI 3.0 subset (`GET /api/v1/openapi.json` when server runs) |
 | [HARDWARE.md](./HARDWARE.md) | Simulator vs real readers, adapter rules |
 | [../STATUS.md](../STATUS.md) | What ships today (v1 foundation summary) |
+| [PILOT.md](./PILOT.md) | First customer cutover (one page) |
 | [PHASE2.md](./PHASE2.md) | Post-v1 tracks (DATEV, hardware, …) |
 | [../README.md](../README.md) | Project overview |
 | [../ROADMAP.md](../ROADMAP.md) | Product direction (high level) |

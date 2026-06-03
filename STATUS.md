@@ -28,6 +28,7 @@ npm run smoke:production
 | [docs/PRODUCTION.md](docs/PRODUCTION.md) | Go-live without demo |
 | [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | Run apps |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [docs/PILOT.md](docs/PILOT.md) | First customer cutover |
 | [docs/PHASE2.md](docs/PHASE2.md) | Post-v1 (DATEV, hardware, …) |
 
 ## Not in v1

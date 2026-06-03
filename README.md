@@ -2,7 +2,7 @@
 
 Modular desktop system for **time tracking** and **access control** (Germany-first, worldwide-ready).
 
-**Current status:** [STATUS.md](STATUS.md) · **v0.2.0** ([release notes](docs/releases/v0.2.0.md))
+**Current status:** [STATUS.md](STATUS.md) · **v0.2.2** ([release notes](docs/releases/v0.2.2.md))
 
 - **TimeShards Server** — Windows desktop app: configuration, API, database, audit.
 - **TimeShards Client** — Windows desktop app: connects to the server for daily work (clock-in/out, access events).
@@ -36,7 +36,9 @@ Clients are **online-first**: they call the server API (`http://<host>:47821` by
 - **[docs/TIME_MODEL.md](docs/TIME_MODEL.md)** — work calendars, Soll/Ist evaluation
 - **[docs/FOUNDATION.md](docs/FOUNDATION.md)** — time-model foundation status
 - **[docs/PRODUCTION.md](docs/PRODUCTION.md)** — production go-live (env, checklist, verify)
-- **[docs/PAYROLL_EXPORT.md](docs/PAYROLL_EXPORT.md)** — Lohn-CSV for payroll handoff
+- **[docs/PAYROLL_EXPORT.md](docs/PAYROLL_EXPORT.md)** — Lohn- + Abwesenheiten-CSV, Monats-Paket
+- **[docs/PILOT.md](docs/PILOT.md)** — first customer cutover checklist
+- **[docs/PHASE2.md](docs/PHASE2.md)** — post-v1 tracks (DATEV, hardware, …)
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — verify before push
 - **[docs/FOUNDATION_CHECKLIST.md](docs/FOUNDATION_CHECKLIST.md)** — admin checklist for Kalender/Soll
 - **[docs/openapi.json](docs/openapi.json)** — OpenAPI 3.0 subset (live: `GET /api/v1/openapi.json`)

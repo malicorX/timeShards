@@ -26,4 +26,4 @@ See [AGENTS.md](AGENTS.md) and [STATUS.md](STATUS.md).
 ## Docs
 
 - Time model: [docs/TIME_MODEL.md](docs/TIME_MODEL.md), [docs/FOUNDATION.md](docs/FOUNDATION.md)
-- Production: [docs/PRODUCTION.md](docs/PRODUCTION.md)
+- Production: [docs/PRODUCTION.md](docs/PRODUCTION.md), pilot: [docs/PILOT.md](docs/PILOT.md)

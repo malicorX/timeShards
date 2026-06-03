@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- [docs/PILOT.md](docs/PILOT.md) — one-page first customer cutover.
+
+### Changed
+
+- README and doc index point to v0.2.2 release notes.
+
 ## [0.2.2] — 2026-06-02
 
 ### Added
