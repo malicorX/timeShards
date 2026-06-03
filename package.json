@@ -31,6 +31,7 @@
     "verify:all": "powershell -ExecutionPolicy Bypass -File scripts/verify-all.ps1",
     "verify:pilot": "powershell -ExecutionPolicy Bypass -File scripts/verify-pilot.ps1",
     "pilot:ready": "powershell -ExecutionPolicy Bypass -File scripts/pilot-ready.ps1",
+    "ship": "powershell -ExecutionPolicy Bypass -File scripts/ship.ps1",
     "verify:doors": "powershell -ExecutionPolicy Bypass -File scripts/verify-door-readers.ps1"
   }
 }
