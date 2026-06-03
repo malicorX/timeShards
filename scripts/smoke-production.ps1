@@ -3,10 +3,12 @@
 
 param(
     [string]$ApiUrl = "http://127.0.0.1:47821",
-    [int]$HealthTimeoutSec = 90
+    [int]$HealthTimeoutSec = 0
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "_smoke-api.ps1")
+if ($HealthTimeoutSec -le 0) { $HealthTimeoutSec = Get-SmokeHealthTimeoutSec -DefaultSec 90 }
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $DataDir = Join-Path $RepoRoot ".data"
 $DbPath = Join-Path $DataDir "smoke-production.db"
@@ -19,8 +21,8 @@ if (Test-Path $DbPath) {
     Remove-Item -Force $DbPath
 }
 
-Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 1
+Stop-TimeshardsApiProcess
+Build-TimeshardsApi -RepoRoot $RepoRoot
 
 $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
 $env:TIMESHARDS_DB = $DbPath
@@ -49,23 +51,12 @@ $apiJob = Start-Job -ScriptBlock {
 } -ArgumentList $RepoRoot, $DbPath, $env:TIMESHARDS_API_HOST, $env:TIMESHARDS_API_PORT, $env:TIMESHARDS_ADMIN_PASSWORD
 
 $healthUrl = "$ApiUrl/api/v1/health"
-$deadline = (Get-Date).AddSeconds($HealthTimeoutSec)
-$ready = $false
-while ((Get-Date) -lt $deadline) {
-    try {
-        $h = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2
-        if ($h.status -eq "ok" -and $h.demo_seeding_enabled -eq $false) { $ready = $true; break }
-    } catch { }
-    Start-Sleep -Seconds 1
-}
-if (-not $ready) {
-    Stop-Job $apiJob -ErrorAction SilentlyContinue
-    Remove-Job $apiJob -Force -ErrorAction SilentlyContinue
-    throw "API did not become healthy in time"
+Write-Host "Waiting for $healthUrl (max ${HealthTimeoutSec}s, production)..."
+$health = Wait-TimeshardsApiHealth -HealthUrl $healthUrl -TimeoutSec $HealthTimeoutSec -ApiJob $apiJob -ReadyWhen {
+    param($h) $h.status -eq 'ok' -and $h.demo_seeding_enabled -eq $false
 }
 Write-Host "API ready."
 
-$health = Invoke-RestMethod -Uri $healthUrl
 if ($health.demo_seeding_enabled -eq $true) {
     throw "Expected demo_seeding_enabled=false with TIMESHARDS_DISABLE_DEMO=1"
 }
@@ -114,7 +105,7 @@ Write-Host "  admin with env password OK"
 
 Stop-Job $apiJob -ErrorAction SilentlyContinue
 Remove-Job $apiJob -Force -ErrorAction SilentlyContinue
-Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Stop-TimeshardsApiProcess
 
 Write-Host ""
 Write-Host "Production smoke OK."

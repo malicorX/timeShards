@@ -42,6 +42,8 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - name: Build API for smoke
+        run: cargo build -q --bin timeshards-api
       - name: DB tests + API smoke (work calendar / Soll)
         run: npm run verify:foundation
 
@@ -56,6 +58,8 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - name: Build API for smoke
+        run: cargo build -q --bin timeshards-api
       - name: Production-mode smoke
         run: npm run smoke:production
 
@@ -70,6 +74,8 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - name: Build API for smoke
+        run: cargo build -q --bin timeshards-api
       - name: Strict default-password smoke
         run: npm run smoke:strict
 
@@ -84,6 +90,8 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - name: Build API for smoke
+        run: cargo build -q --bin timeshards-api
       - name: External hardware adapter smoke
         run: npm run smoke:hw-external
 
@@ -98,5 +106,7 @@ jobs:
           node-version: "20"
           cache: npm
       - run: npm ci
+      - name: Build API for smoke
+        run: cargo build -q --bin timeshards-api
       - name: Invalid HW adapter falls back to sim
         run: npm run smoke:hw-unknown

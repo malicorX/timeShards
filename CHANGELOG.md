@@ -8,9 +8,11 @@ All notable changes to this project are documented here.
 
 - Server **Ersteinrichtung** card on Übersicht when demo is off and fewer than 2 active employees.
 - [docs/DATEV.md](docs/DATEV.md) — DATEV handoff prerequisites and draft column mapping.
+- `scripts/_smoke-api.ps1` — shared stop/build/wait helpers for headless smoke.
 
 ### Fixed
 
+- CI smoke: pre-build API, stop stray processes, wait for correct health (hw adapter / demo mode); longer timeout on GitHub Actions.
 - Smoke scripts stop stray `timeshards-api` and wait for the correct `demo_seeding` flag (fixes verify after `smoke:production`).
 
 ### Changed

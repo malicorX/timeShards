@@ -3,10 +3,12 @@
 
 param(
     [string]$ApiUrl = "http://127.0.0.1:47821",
-    [int]$HealthTimeoutSec = 90
+    [int]$HealthTimeoutSec = 0
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "_smoke-api.ps1")
+if ($HealthTimeoutSec -le 0) { $HealthTimeoutSec = Get-SmokeHealthTimeoutSec -DefaultSec 90 }
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $DataDir = Join-Path $RepoRoot ".data"
 $DbPath = Join-Path $DataDir "smoke.db"
@@ -20,8 +22,8 @@ if (Test-Path $DbPath) {
     Write-Host "Removed previous smoke DB for a clean run."
 }
 
-Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 1
+Stop-TimeshardsApiProcess
+Build-TimeshardsApi -RepoRoot $RepoRoot
 
 $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
 $env:TIMESHARDS_DB = $DbPath
@@ -50,31 +52,10 @@ $apiJob = Start-Job -ScriptBlock {
 } -ArgumentList $RepoRoot, $DbPath, $env:TIMESHARDS_API_HOST, $env:TIMESHARDS_API_PORT
 
 $healthUrl = "$ApiUrl/api/v1/health"
-Write-Host "Waiting for $healthUrl (max ${HealthTimeoutSec}s)..."
-$deadline = (Get-Date).AddSeconds($HealthTimeoutSec)
-$ready = $false
-while ((Get-Date) -lt $deadline) {
-    if ($apiJob.State -eq "Failed") {
-        Receive-Job $apiJob
-        throw "API process failed to start"
-    }
-    try {
-        $r = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 3
-        if ($r.status -eq "ok" -and $r.demo_seeding_enabled -eq $true) {
-            $ready = $true
-            break
-        }
-    } catch {
-        Start-Sleep -Seconds 2
-    }
-}
-
-if (-not $ready) {
-    Receive-Job $apiJob -ErrorAction SilentlyContinue
-    Stop-Job $apiJob -ErrorAction SilentlyContinue
-    Remove-Job $apiJob -Force -ErrorAction SilentlyContinue
-    throw "API did not become healthy in time"
-}
+Write-Host "Waiting for $healthUrl (max ${HealthTimeoutSec}s, demo seed)..."
+Wait-TimeshardsApiHealth -HealthUrl $healthUrl -TimeoutSec $HealthTimeoutSec -ApiJob $apiJob -ReadyWhen {
+    param($h) $h.status -eq 'ok' -and $h.demo_seeding_enabled -eq $true
+} | Out-Null
 
 Write-Host "API ready.`n"
 try {
@@ -83,5 +64,5 @@ try {
     Write-Host "`nStopping API..."
     Stop-Job $apiJob -ErrorAction SilentlyContinue
     Remove-Job $apiJob -Force -ErrorAction SilentlyContinue
-    Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Stop-TimeshardsApiProcess
 }
