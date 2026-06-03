@@ -22,6 +22,7 @@
     "hw:send": "powershell -ExecutionPolicy Bypass -File scripts/send-hw-tcp.ps1",
     "smoke:hw-unknown": "powershell -ExecutionPolicy Bypass -File scripts/smoke-unknown-hw.ps1",
     "api": "powershell -ExecutionPolicy Bypass -File scripts/run-api.ps1",
+    "api:pilot": "powershell -ExecutionPolicy Bypass -File scripts/run-api-pilot.ps1",
     "verify:foundation": "powershell -ExecutionPolicy Bypass -File scripts/verify-foundation.ps1",
     "foundation:health": "powershell -ExecutionPolicy Bypass -File scripts/foundation-health.ps1",
     "verify:all": "powershell -ExecutionPolicy Bypass -File scripts/verify-all.ps1",

@@ -16,7 +16,9 @@ Optional: `TIMESHARDS_HW_ADAPTER=sim` until real readers are wired ([HARDWARE.md
 
 ```powershell
 cd m:\Data\Projects\ai_timeshards
-npm run api   # or TimeShards Server app
+$env:TIMESHARDS_ADMIN_PASSWORD = "YourSecret"
+npm run api:pilot   # headless: demo off, default passwords blocked
+# or TimeShards Server app with the same env vars
 ```
 
 - Log in as `admin` with your `TIMESHARDS_ADMIN_PASSWORD`.

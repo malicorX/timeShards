@@ -13,6 +13,7 @@ npm run smoke:api               # headless API + smoke (no Tauri)
 npm run smoke:production        # DISABLE_DEMO + default-password login blocked
 npm run smoke:strict            # BLOCK_DEFAULT_PASSWORDS with demo seed still on
 npm run api                     # headless API only (scripts/run-api.ps1)
+npm run api:pilot               # pilot env (DISABLE_DEMO + BLOCK_DEFAULT_PASSWORDS; needs TIMESHARDS_ADMIN_PASSWORD)
 npm run check:all               # scripts/check.ps1 (cargo + svelte-check)
 .\scripts\check.ps1              # same as check:all
 npm run verify:foundation       # cargo test timeshards-db + smoke:api
