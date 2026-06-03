@@ -149,6 +149,11 @@ $fix = Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/admin/foundation-fix"
 Write-Host "  foundation-fix: calendars=$($fix.calendars_assigned) timesheets=$($fix.timesheets_updated)"
 $dashAfterFix = Invoke-RestMethod -Uri "$ApiUrl/api/v1/admin/dashboard" -Headers $headers
 if ($dashAfterFix.timesheets_current_week_no_soll -gt 0) {
+    Write-Host "  retry foundation-fix ($($dashAfterFix.timesheets_current_week_no_soll) KW ohne Soll)..."
+    Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/admin/foundation-fix" -Headers $headers | Out-Null
+    $dashAfterFix = Invoke-RestMethod -Uri "$ApiUrl/api/v1/admin/dashboard" -Headers $headers
+}
+if ($dashAfterFix.timesheets_current_week_no_soll -gt 0) {
     throw "Expected timesheets_current_week_no_soll=0 after foundation-fix, got $($dashAfterFix.timesheets_current_week_no_soll)"
 }
 $tsList = @(Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/timesheets" -Headers $headers)

@@ -48,8 +48,10 @@ jobs:
       - run: npm ci
       - name: Build API for smoke
         run: cargo build -q --bin timeshards-api
-      - name: DB tests + API smoke (work calendar / Soll)
-        run: npm run verify:foundation
+      - name: timeshards-db tests
+        run: cargo test -p timeshards-db
+      - name: API smoke (work calendar / Soll)
+        run: npm run smoke:api
 
   smoke-integration:
     runs-on: windows-latest

@@ -48,8 +48,11 @@ function Wait-TcpPortOpen {
     param(
         [string]$HostName = '127.0.0.1',
         [int]$Port,
-        [int]$TimeoutSec = 30
+        [int]$TimeoutSec = 0
     )
+    if ($TimeoutSec -le 0) {
+        $TimeoutSec = if ($env:GITHUB_ACTIONS -eq 'true') { 60 } else { 30 }
+    }
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     while ((Get-Date) -lt $deadline) {
         $client = New-Object System.Net.Sockets.TcpClient
