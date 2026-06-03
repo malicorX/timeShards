@@ -108,7 +108,7 @@ Treat as done unless a row is marked **partial**:
 | `sim` + `external` adapters | ✅ | |
 | TCP JSON + compact line + door state | ✅ | `smoke:hw-external` |
 | Document bridge deployment | ✅ | [HARDWARE.md](./docs/HARDWARE.md) pilot section |
-| Pilot: one reader → one door mapping | ✅ partial | `npm run verify:doors` + site bridge config |
+| Pilot: one reader → one door mapping | ✅ partial | `npm run verify:doors` / `npm run hw:pilot` + site bridge |
 | Fail-closed defaults review (zones without rules) | ✅ | HARDWARE.md + verify:doors allow-rule check |
 
 **Exit:** 1-week pilot log; access events match physical tests; no silent bind failures on restart.

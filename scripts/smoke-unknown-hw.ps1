@@ -9,6 +9,8 @@ param(
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_smoke-api.ps1")
 if ($HealthTimeoutSec -le 0) { $HealthTimeoutSec = Get-SmokeHealthTimeoutSec -DefaultSec 90 }
+$ApiUrl = Resolve-SmokeApiUrl -ApiUrl $ApiUrl
+$apiUri = [Uri]$ApiUrl
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $DbPath = Join-Path $RepoRoot ".data\smoke-unknown-hw.db"
@@ -31,8 +33,9 @@ $apiJob = Start-Job -ScriptBlock {
     Remove-Item Env:TIMESHARDS_ADMIN_PASSWORD -ErrorAction SilentlyContinue
     $exe = Join-Path $Root "target\debug\timeshards-api.exe"
     if (Test-Path $exe) { & $exe 2>&1 } else { cargo run -q --bin timeshards-api 2>&1 }
-} -ArgumentList $RepoRoot, $DbPath, "127.0.0.1", "47821"
+} -ArgumentList $RepoRoot, $DbPath, $apiUri.Host, "$($apiUri.Port)"
 
+Wait-TcpPortOpen -HostName $apiUri.Host -Port $apiUri.Port -TimeoutSec 30
 $healthUrl = "$ApiUrl/api/v1/health"
 $health = Wait-TimeshardsApiHealth -HealthUrl $healthUrl -TimeoutSec $HealthTimeoutSec -ApiJob $apiJob -ReadyWhen {
     param($h)

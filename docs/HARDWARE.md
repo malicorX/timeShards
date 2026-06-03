@@ -89,6 +89,14 @@ Manual test: `.\scripts\send-hw-tcp.ps1 -CredentialUid DEMO-0002`
 
 Before pilot: with API running, `npm run verify:doors` prints door UUIDs and `reader_id` values for bridge configuration.
 
+Full M4 loop (pilot env + external TCP + test scan):
+
+```powershell
+$env:TIMESHARDS_ADMIN_PASSWORD = "YourSecret"
+npm run api:hw-pilot   # terminal 1
+npm run hw:pilot       # terminal 2 (after health shows external)
+```
+
 ## Simulator readers (seed)
 
 | `reader_id` | Role |

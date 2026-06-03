@@ -5,8 +5,15 @@
 param(
     [string]$ApiUrl = "http://127.0.0.1:47821",
     [string]$Username = "admin",
-    [string]$Password = "admin"
+    [string]$Password = ""
 )
+
+if (-not $Password -and $env:TIMESHARDS_ADMIN_PASSWORD) {
+    $Password = $env:TIMESHARDS_ADMIN_PASSWORD
+}
+if (-not $Password) {
+    $Password = "admin"
+}
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_smoke-api.ps1")

@@ -9,6 +9,8 @@ param(
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_smoke-api.ps1")
 if ($HealthTimeoutSec -le 0) { $HealthTimeoutSec = Get-SmokeHealthTimeoutSec -DefaultSec 90 }
+$ApiUrl = Resolve-SmokeApiUrl -ApiUrl $ApiUrl
+$apiUri = [Uri]$ApiUrl
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $DataDir = Join-Path $RepoRoot ".data"
@@ -24,8 +26,8 @@ Build-TimeshardsApi -RepoRoot $RepoRoot
 
 $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
 $env:TIMESHARDS_DB = $DbPath
-$env:TIMESHARDS_API_HOST = "127.0.0.1"
-$env:TIMESHARDS_API_PORT = "47821"
+$env:TIMESHARDS_API_HOST = $apiUri.Host
+$env:TIMESHARDS_API_PORT = "$($apiUri.Port)"
 $env:TIMESHARDS_HW_ADAPTER = "external"
 if ($env:GITHUB_ACTIONS -eq 'true') {
     $hwPort = 47840 + (Get-Random -Maximum 200)
@@ -56,6 +58,7 @@ $apiJob = Start-Job -ScriptBlock {
     if (Test-Path $exe) { & $exe 2>&1 } else { cargo run -q --bin timeshards-api 2>&1 }
 } -ArgumentList $RepoRoot, $DbPath, $env:TIMESHARDS_API_HOST, $env:TIMESHARDS_API_PORT, $env:TIMESHARDS_HW_ADAPTER, $env:TIMESHARDS_HW_TCP_ADDR
 
+Wait-TcpPortOpen -HostName $apiUri.Host -Port $apiUri.Port -TimeoutSec 30
 $healthUrl = "$ApiUrl/api/v1/health"
 Write-Host "Waiting for $healthUrl (max ${HealthTimeoutSec}s, hw=external)..."
 $health = Wait-TimeshardsApiHealth -HealthUrl $healthUrl -TimeoutSec $HealthTimeoutSec -ApiJob $apiJob -ReadyWhen {
