@@ -47,6 +47,22 @@ jobs:
       - name: DB tests + API smoke (work calendar / Soll)
         run: npm run verify:foundation
 
+  smoke-integration:
+    runs-on: windows-latest
+    needs: [rust]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Build API for smoke
+        run: cargo build -q --bin timeshards-api
+      - name: External hardware adapter smoke
+        run: npm run smoke:hw-external
+
   smoke-production:
     runs-on: windows-latest
     needs: [rust]
@@ -78,22 +94,6 @@ jobs:
         run: cargo build -q --bin timeshards-api
       - name: Strict default-password smoke
         run: npm run smoke:strict
-
-  smoke-hw-external:
-    runs-on: windows-latest
-    needs: [rust]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-      - run: npm ci
-      - name: Build API for smoke
-        run: cargo build -q --bin timeshards-api
-      - name: External hardware adapter smoke
-        run: npm run smoke:hw-external
 
   smoke-hw-unknown:
     runs-on: windows-latest

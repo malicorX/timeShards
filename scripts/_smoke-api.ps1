@@ -39,6 +39,31 @@ function Get-SmokePollDelayMs {
     return 200
 }
 
+function Wait-TcpPortOpen {
+    param(
+        [string]$HostName = '127.0.0.1',
+        [int]$Port,
+        [int]$TimeoutSec = 30
+    )
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        $client = New-Object System.Net.Sockets.TcpClient
+        try {
+            $iar = $client.BeginConnect($HostName, $Port, $null, $null)
+            if ($iar.AsyncWaitHandle.WaitOne(800) -and $client.Connected) {
+                $client.Close()
+                return
+            }
+        } catch { }
+        finally {
+            if ($client.Connected) { $client.Close() }
+            $client.Dispose()
+        }
+        Start-Sleep -Milliseconds 200
+    }
+    throw "TCP $HostName`:$Port not accepting connections within ${TimeoutSec}s"
+}
+
 function Wait-CountIncreased {
     param(
         [int]$Before,

@@ -27,7 +27,13 @@ $env:TIMESHARDS_DB = $DbPath
 $env:TIMESHARDS_API_HOST = "127.0.0.1"
 $env:TIMESHARDS_API_PORT = "47821"
 $env:TIMESHARDS_HW_ADAPTER = "external"
-$env:TIMESHARDS_HW_TCP_ADDR = "127.0.0.1:47831"
+if ($env:GITHUB_ACTIONS -eq 'true') {
+    $hwPort = 47840 + (Get-Random -Maximum 200)
+    $env:TIMESHARDS_HW_TCP_ADDR = "127.0.0.1:$hwPort"
+    Write-Host "  CI: dynamic hardware TCP port $hwPort"
+} else {
+    $env:TIMESHARDS_HW_TCP_ADDR = "127.0.0.1:47831"
+}
 Remove-Item Env:TIMESHARDS_DISABLE_DEMO -ErrorAction SilentlyContinue
 Remove-Item Env:TIMESHARDS_BLOCK_DEFAULT_PASSWORDS -ErrorAction SilentlyContinue
 
@@ -54,6 +60,14 @@ $health = Wait-TimeshardsApiHealth -HealthUrl $healthUrl -TimeoutSec $HealthTime
     param($h) $h.status -eq 'ok' -and $h.hardware_adapter -eq 'external'
 }
 Write-Host "  hardware_adapter=external"
+$tcpListen = $health.hardware_tcp_listen
+if (-not $tcpListen) {
+    throw "Expected health.hardware_tcp_listen when TIMESHARDS_HW_TCP_ADDR is set"
+}
+$tcpHost, $tcpPortStr = $tcpListen -split ':', 2
+$tcpPort = [int]$tcpPortStr
+Wait-TcpPortOpen -HostName $tcpHost -Port $tcpPort -TimeoutSec 30
+Write-Host "  TCP listen ready on $tcpListen"
 
 $login = Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/auth/login" `
     -Body (@{ username = "admin"; password = "admin" } | ConvertTo-Json) -ContentType "application/json"
@@ -104,7 +118,7 @@ $tcpBefore = Get-AccessEventCount -AuthHeaders $headers
 $line = '{"reader_id":"sim.reader.main","credential_uid":"DEMO-0003"}'
 $tcp = New-Object System.Net.Sockets.TcpClient
 try {
-    $tcp.Connect("127.0.0.1", 47831)
+    $tcp.Connect($tcpHost, $tcpPort)
     $stream = $tcp.GetStream()
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($line + "`n")
     $stream.Write($bytes, 0, $bytes.Length)
@@ -124,7 +138,7 @@ Write-Host "TCP compact line (reader;credential)..."
 $tcpBefore2 = Get-AccessEventCount -AuthHeaders $headers
 $tcp2 = New-Object System.Net.Sockets.TcpClient
 try {
-    $tcp2.Connect("127.0.0.1", 47831)
+    $tcp2.Connect($tcpHost, $tcpPort)
     $stream2 = $tcp2.GetStream()
     $bytes2 = [System.Text.Encoding]::UTF8.GetBytes("sim.reader.main.out;DEMO-ADMIN-001`n")
     $stream2.Write($bytes2, 0, $bytes2.Length)
@@ -151,7 +165,7 @@ $doorId = $doors[0].id
 $doorLine = "door;$doorId;alarm"
 $tcp3 = New-Object System.Net.Sockets.TcpClient
 try {
-    $tcp3.Connect("127.0.0.1", 47831)
+    $tcp3.Connect($tcpHost, $tcpPort)
     $stream3 = $tcp3.GetStream()
     $bytes3 = [System.Text.Encoding]::UTF8.GetBytes($doorLine + "`n")
     $stream3.Write($bytes3, 0, $bytes3.Length)
@@ -176,7 +190,7 @@ Write-Host "  TCP door state OK (alarm)"
 Write-Host "TCP reader offline (audit)..."
 $tcp4 = New-Object System.Net.Sockets.TcpClient
 try {
-    $tcp4.Connect("127.0.0.1", 47831)
+    $tcp4.Connect($tcpHost, $tcpPort)
     $stream4 = $tcp4.GetStream()
     $bytes4 = [System.Text.Encoding]::UTF8.GetBytes("reader_offline;sim.reader.main`n")
     $stream4.Write($bytes4, 0, $bytes4.Length)

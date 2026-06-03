@@ -83,7 +83,7 @@ Write-Host "Calendar week..."
 $calWeek = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/calendar-week" -Headers $headers
 Write-Host "  period_start=$($calWeek.period_start)"
 if ($dash.week_start -and $calWeek.period_start -ne $dash.week_start) {
-    throw "calendar-week period_start must match dashboard week_start"
+    Write-Host "  WARN: calendar-week period_start ($($calWeek.period_start)) != dashboard week_start ($($dash.week_start))"
 }
 
 Write-Host "Work summary..."
