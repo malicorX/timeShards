@@ -1,6 +1,8 @@
 # AI TimeShards — Product Roadmap (active)
 
-**Last updated:** 2026-06-02 · **Shipping line:** v0.2.x (time foundation + access simulation + payroll CSVs)
+**Last updated:** 2026-06-03 · **Shipping line:** v0.2.x (time foundation + access simulation + payroll CSVs)
+
+**Implementation status (2026-06-03):** M1–M5 code paths are in `main`. Open items are **pilot/ops** (site hardware bridge, DATEV column feedback), not blocked on new features. See [STATUS.md](./STATUS.md).
 
 This is the **canonical plan** for what we build next. It reflects the **monolithic Axum API + two Tauri apps** in the repo today—not the optional micro-kernel experiment in `crates/timeshards-kernel`.
 
@@ -151,17 +153,16 @@ gantt
   section Hardening
   M1 Pilot           :done, 2026-05, 2026-06
   section UX
-  M2 UX Phase A-B    :active, 2026-06, 2026-07
-  M3 Perioden        :2026-07, 2026-08
+  M2 UX Phase A-B    :done, 2026-06, 2026-07
+  M3 Perioden        :done, 2026-06, 2026-07
   section Integrations
   M4 Hardware pilot  :2026-08, 2026-09
   M5 Payroll/DATEV   :2026-08, 2026-10
 ```
 
-1. Finish **M2** (tokens + shared components + client Zeit pillar).
-2. Parallel **M3** (Feiertag + Umschaltplan UI) — unblocks HR self-service.
-3. **M4** when pilot needs physical access; else stay on `sim`.
-4. **M5** after first real payroll month export.
+1. **Pilot:** `TIMESHARDS_DISABLE_DEMO=1`, [PILOT.md](./docs/PILOT.md), `npm run smoke:production`.
+2. **Hardware (optional):** external adapter + `npm run verify:doors` before bridge go-live.
+3. **Payroll:** export Lohn-CSV after first month; record bureau feedback in [DATEV.md](./docs/DATEV.md).
 
 ---
 
