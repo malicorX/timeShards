@@ -148,6 +148,7 @@ Omit or empty `employee_no` for auto-numbering (`E0001`, …). With `issue_badge
 |--------|------|-------------|
 | GET | `/api/v1/reports/timesheets/export` | `?format=csv\|html&status=&period_start=` — employees without manager/HR role only see their own rows |
 | GET | `/api/v1/reports/payroll/export` | `?year=&month=&format=csv&aggregate=employee&employee_id=` — approved weeks in calendar month (Berlin); semicolon CSV for payroll |
+| GET | `/api/v1/reports/absences/export` | `?year=&month=&format=csv&employee_id=` — approved absences overlapping month (Berlin); UTF-8 BOM CSV |
 | GET | `/api/v1/reports/access/export` | `?format=csv\|html&from=&to=&limit=` — without manager/HR/security role, only own events |
 
 ## Roles (default seed)

@@ -19,6 +19,7 @@ pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/api/v1/reports/timesheets/export", get(export_timesheets))
         .route("/api/v1/reports/payroll/export", get(export_payroll))
+        .route("/api/v1/reports/absences/export", get(export_absences_payroll))
         .route("/api/v1/reports/access/export", get(export_access_events))
 }
 
@@ -101,6 +102,16 @@ struct PayrollExportQuery {
     /// `employee` = one summary row per MA; default = one row per approved KW
     #[serde(default)]
     aggregate: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+struct MonthAbsenceExportQuery {
+    year: i32,
+    month: u32,
+    #[serde(default = "default_format")]
+    format: String,
+    #[serde(default)]
+    employee_id: Option<String>,
 }
 
 async fn export_payroll(
@@ -266,6 +277,86 @@ async fn export_payroll(
         return Err(ApiError::bad_request("Nur format=csv unterstützt"));
     }
     let filename = format!("lohn_export_{}_{:02}.csv", q.year, q.month);
+    let disposition = HeaderValue::from_str(&format!("attachment; filename=\"{filename}\""))
+        .unwrap_or_else(|_| HeaderValue::from_static("attachment"));
+    let mut resp = (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "text/csv; charset=utf-8")],
+        out,
+    )
+        .into_response();
+    resp.headers_mut()
+        .insert(header::CONTENT_DISPOSITION, disposition);
+    Ok(resp)
+}
+
+async fn export_absences_payroll(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Query(q): Query<MonthAbsenceExportQuery>,
+) -> Result<Response, ApiError> {
+    let session = auth_from_headers(&state.db, &headers).await?;
+    if !session.permissions.allows(Resource::Report, Action::Export)
+        && !session.permissions.allows(Resource::Timesheet, Action::Approve)
+    {
+        return Err(ApiError::forbidden("Keine Export-Berechtigung"));
+    }
+
+    if q.format != "csv" {
+        return Err(ApiError::bad_request("Nur format=csv unterstützt"));
+    }
+
+    let (from, to) = month_bounds_rfc3339(q.year, q.month)?;
+
+    let own_employee_id = if can_manage_others(&session) {
+        None
+    } else {
+        Some(employee_for_user(&state.db, session.user_id).await?.to_string())
+    };
+    let filter_emp = q.employee_id.as_ref().or(own_employee_id.as_ref());
+
+    let mut sql = String::from(
+        r#"
+        SELECT e.employee_no, e.display_name, a.absence_type, a.starts_at, a.ends_at, a.reason
+        FROM absence_requests a
+        JOIN employees e ON e.id = a.employee_id
+        WHERE a.status = 'approved' AND a.starts_at < ? AND a.ends_at >= ?
+        "#,
+    );
+    if filter_emp.is_some() {
+        sql.push_str(" AND a.employee_id = ?");
+    }
+    sql.push_str(" ORDER BY e.employee_no, a.starts_at");
+
+    let mut query = sqlx::query_as::<_, (String, String, String, String, String, Option<String>)>(
+        &sql,
+    )
+    .bind(&to)
+    .bind(&from);
+    if let Some(eid) = filter_emp {
+        query = query.bind(eid);
+    }
+
+    let rows = query
+        .fetch_all(&state.db)
+        .await
+        .map_err(|e| ApiError::internal(e.to_string()))?;
+
+    let mut out = String::from(
+        "\u{feff}personal_nr;name;jahr;monat;typ;von;bis;grund\n",
+    );
+    for (no, name, absence_type, starts_at, ends_at, reason) in rows {
+        let reason = reason.unwrap_or_default().replace(';', ",");
+        out.push_str(&format!(
+            "{no};{name};{};{};{absence_type};{starts_at};{ends_at};{reason}\n",
+            q.year, q.month
+        ));
+    }
+    if out.lines().count() <= 1 {
+        out.push_str("(keine freigegebenen Abwesenheiten im Monat)\n");
+    }
+
+    let filename = format!("abwesenheit_export_{}_{:02}.csv", q.year, q.month);
     let disposition = HeaderValue::from_str(&format!("attachment; filename=\"{filename}\""))
         .unwrap_or_else(|_| HeaderValue::from_static("attachment"));
     let mut resp = (

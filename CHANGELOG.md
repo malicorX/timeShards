@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+### Added
+
+- `GET /api/v1/reports/absences/export` — approved absences overlapping month (payroll handoff CSV).
+
 ## [0.2.1] — 2026-06-02
 
 ### Added

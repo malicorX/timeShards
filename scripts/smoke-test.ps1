@@ -256,6 +256,17 @@ if ($payrollText -notmatch 'personal_nr;name') {
 Remove-Item -Force $payrollTmp -ErrorAction SilentlyContinue
 Write-Host "  payroll CSV OK ($($payrollBytes.Length) bytes, UTF-8 BOM)"
 
+Write-Host "Absences payroll CSV export..."
+$absTmp = Join-Path $env:TEMP "timeshards-smoke-absences.csv"
+Invoke-WebRequest -Uri "$ApiUrl/api/v1/reports/absences/export?year=$payYear&month=$payMonth&format=csv" `
+    -Headers $headers -OutFile $absTmp | Out-Null
+$absText = [System.IO.File]::ReadAllText($absTmp)
+if ($absText -notmatch 'personal_nr;name;jahr;monat;typ') {
+    throw "Absences export CSV missing expected header"
+}
+Remove-Item -Force $absTmp -ErrorAction SilentlyContinue
+Write-Host "  absences export CSV OK"
+
 $demoTemplates = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/shift-templates" -Headers $demoHeaders
 Write-Host "  shift_templates=$($demoTemplates.Count) (scoped to own employee)"
 $demoShifts = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/shifts" -Headers $demoHeaders

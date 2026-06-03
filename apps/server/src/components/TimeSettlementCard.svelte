@@ -144,6 +144,23 @@
     }
   }
 
+  async function exportAbsencesCsv() {
+    try {
+      const params = new URLSearchParams({
+        year: String(settlementYear),
+        month: String(settlementMonth),
+        format: 'csv',
+      });
+      if (payrollEmployeeFilter) params.set('employee_id', payrollEmployeeFilter);
+      const path = `/api/v1/reports/absences/export?${params}`;
+      const name = `abwesenheit_export_${settlementYear}_${String(settlementMonth).padStart(2, '0')}.csv`;
+      await downloadFile(apiUrl, path, name);
+      notify('success', `Abwesenheiten-CSV ${settlementMonth}/${settlementYear} heruntergeladen`);
+    } catch (e) {
+      notify('error', e instanceof Error ? e.message : String(e));
+    }
+  }
+
   async function closeMonthSettlement() {
     if (!settlementEmployeeId) {
       notify('error', 'Mitarbeiter für Monatsabschluss wählen');
@@ -233,6 +250,7 @@
       Eine Zeile pro Mitarbeiter (Monatssumme)
     </label>
     <button class="secondary" type="button" onclick={exportPayrollCsv}>Lohn-CSV herunterladen</button>
+    <button class="secondary" type="button" onclick={exportAbsencesCsv}>Abwesenheiten-CSV</button>
   </div>
 
   <h4 style="margin: 1rem 0 0.5rem;">Monatsabschluss</h4>

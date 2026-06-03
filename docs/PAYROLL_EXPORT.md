@@ -1,6 +1,13 @@
-# Lohn-CSV export
+# Lohn- & Abwesenheits-CSV
 
-Interim payroll handoff before a full DATEV bridge. API: `GET /api/v1/reports/payroll/export`.
+Interim payroll handoff before a full DATEV bridge.
+
+| Export | API |
+|--------|-----|
+| Stunden (freigegebene KW) | `GET /api/v1/reports/payroll/export` |
+| Abwesenheiten (freigegeben) | `GET /api/v1/reports/absences/export` |
+
+## Lohn-CSV (`/reports/payroll/export`)
 
 ## Parameters
 
@@ -34,9 +41,23 @@ File starts with a **UTF-8 BOM** so Excel (DE) opens encoding and `;` correctly.
 
 Only **approved** timesheets are included. If none: a single placeholder line `(keine freigegebenen Wochen im Monat)`.
 
+## Abwesenheiten-CSV (`/reports/absences/export`)
+
+| Query | Required | Description |
+|-------|----------|-------------|
+| `year`, `month` | yes | Calendar month (Berlin) |
+| `format` | no | `csv` |
+| `employee_id` | no | Optional filter |
+
+Includes **approved** absence requests that overlap the month (`starts_at` / `ends_at`). Columns:
+
+`personal_nr;name;jahr;monat;typ;von;bis;grund`
+
+UTF-8 BOM for Excel. Placeholder row if none in month.
+
 ## UI
 
-Server → **Zeit** → **Abschluss & Export** → **Lohn-CSV herunterladen**.
+Server → **Zeit** → **Abschluss & Export** → **Lohn-CSV** / **Abwesenheiten-CSV**.
 
 ## Verify
 
