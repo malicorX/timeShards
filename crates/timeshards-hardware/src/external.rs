@@ -1,5 +1,5 @@
 use crate::gateway::{HardwareEvent, HardwareGateway};
-use crate::tcp_ingest::spawn_tcp_credential_listener;
+use crate::tcp_ingest::start_tcp_credential_listener;
 use async_trait::async_trait;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
@@ -33,7 +33,7 @@ impl HardwareGateway for ExternalGateway {
 
     async fn start(&self) -> anyhow::Result<()> {
         if let Some(addr) = hardware_tcp_listen_addr() {
-            let handle = spawn_tcp_credential_listener(addr.clone(), self.events.clone());
+            let handle = start_tcp_credential_listener(addr.clone(), self.events.clone()).await?;
             *self.tcp_task.lock().await = Some(handle);
             info!(adapter = %self.id, addr = %addr, "external hardware adapter started");
         } else {

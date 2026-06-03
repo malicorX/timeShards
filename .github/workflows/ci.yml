@@ -1,5 +1,9 @@
 name: CI
 
+env:
+  # Cargo writes progress to stderr; do not fail PowerShell steps on NativeCommandError.
+  PSNativeCommandUseErrorActionPreference: false
+
 on:
   push:
     branches: [main, master]

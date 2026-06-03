@@ -1,5 +1,10 @@
 # Shared helpers for headless API smoke scripts (dot-source from scripts/*.ps1).
 
+# Cargo/npm write progress to stderr; GHA PowerShell 7 treats that as NativeCommandError otherwise.
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue) {
+    $PSNativeCommandUseErrorActionPreference = $false
+}
+
 function Stop-TimeshardsApiProcess {
     Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 1

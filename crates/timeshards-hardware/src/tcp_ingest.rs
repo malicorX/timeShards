@@ -15,7 +15,7 @@ use serde::Deserialize;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
@@ -143,22 +143,18 @@ fn presentation_from_parts(
     })
 }
 
-/// Listen for newline-delimited hardware lines and push them on the hardware channel.
-pub fn spawn_tcp_credential_listener(
+/// Bind TCP ingest and accept newline-delimited hardware lines on a background task.
+pub async fn start_tcp_credential_listener(
     listen_addr: impl Into<String>,
     events: HardwareEventSender,
-) -> JoinHandle<()> {
+) -> anyhow::Result<JoinHandle<()>> {
     let listen_addr = listen_addr.into();
-    tokio::spawn(async move {
-        let listener = match TcpListener::bind(&listen_addr).await {
-            Ok(l) => l,
-            Err(e) => {
-                error!(addr = %listen_addr, error = %e, "TCP hardware ingest failed to bind");
-                return;
-            }
-        };
-        info!(addr = %listen_addr, "TCP hardware ingest listening (newline-delimited lines)");
+    let listener = TcpListener::bind(&listen_addr)
+        .await
+        .with_context(|| format!("TCP hardware ingest failed to bind on {listen_addr}"))?;
+    info!(addr = %listen_addr, "TCP hardware ingest listening (newline-delimited lines)");
 
+    Ok(tokio::spawn(async move {
         loop {
             let (stream, peer) = match listener.accept().await {
                 Ok(v) => v,
@@ -184,7 +180,7 @@ pub fn spawn_tcp_credential_listener(
                 }
             });
         }
-    })
+    }))
 }
 
 #[cfg(test)]
