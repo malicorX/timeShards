@@ -6,7 +6,7 @@ v1 (work calendar → Soll, rebuild, approvals, Konten, go-live UX) is documente
 
 | Track | Goal | Notes |
 |-------|------|--------|
-| **DATEV** | Native or semi-native handoff to Lohn | Today: [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md) (Lohn- + Abwesenheiten-CSV). Needs target DATEV product + sample import spec from customer. |
+| **DATEV** | Native or semi-native handoff to Lohn | Today: [PAYROLL_EXPORT.md](./PAYROLL_EXPORT.md) (Lohn- + Abwesenheiten-CSV). Spec checklist: [DATEV.md](./DATEV.md). |
 | **First-run setup** | Empty-DB onboarding (company, first MA, badges) | Today: seed + `TIMESHARDS_ADMIN_PASSWORD` + Go-Live-Assistent for production KPIs. |
 | **Hardware** | Production reader TCP / Primion path | Today: `sim` + `external` adapter; see [HARDWARE.md](./HARDWARE.md). |
 | **Stamp ↔ door** | Optional auto-sync or alerts | Today: dashboard KPI Zeit↔Zutritt; process clarification only. |

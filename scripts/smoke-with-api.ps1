@@ -20,6 +20,9 @@ if (Test-Path $DbPath) {
     Write-Host "Removed previous smoke DB for a clean run."
 }
 
+Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 1
+
 $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
 $env:TIMESHARDS_DB = $DbPath
 $env:TIMESHARDS_API_HOST = "127.0.0.1"
@@ -57,7 +60,7 @@ while ((Get-Date) -lt $deadline) {
     }
     try {
         $r = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 3
-        if ($r.status -eq "ok") {
+        if ($r.status -eq "ok" -and $r.demo_seeding_enabled -eq $true) {
             $ready = $true
             break
         }

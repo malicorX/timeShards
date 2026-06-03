@@ -15,6 +15,7 @@
 | [HARDWARE.md](./HARDWARE.md) | Simulator vs real readers, adapter rules |
 | [../STATUS.md](../STATUS.md) | What ships today (v1 foundation summary) |
 | [PILOT.md](./PILOT.md) | First customer cutover (one page) |
+| [DATEV.md](./DATEV.md) | DATEV Phase 2 — prerequisites and mapping draft |
 | [PHASE2.md](./PHASE2.md) | Post-v1 tracks (DATEV, hardware, …) |
 | [../README.md](../README.md) | Project overview |
 | [../ROADMAP.md](../ROADMAP.md) | Product direction (high level) |

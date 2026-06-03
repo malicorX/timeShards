@@ -6,10 +6,16 @@ All notable changes to this project are documented here.
 
 ### Added
 
-- [docs/PILOT.md](docs/PILOT.md) — one-page first customer cutover.
+- Server **Ersteinrichtung** card on Übersicht when demo is off and fewer than 2 active employees.
+- [docs/DATEV.md](docs/DATEV.md) — DATEV handoff prerequisites and draft column mapping.
+
+### Fixed
+
+- Smoke scripts stop stray `timeshards-api` and wait for the correct `demo_seeding` flag (fixes verify after `smoke:production`).
 
 ### Changed
 
+- [docs/PILOT.md](docs/PILOT.md) — one-page first customer cutover (shipped in prior commit).
 - README and doc index point to v0.2.2 release notes.
 
 ## [0.2.2] — 2026-06-02

@@ -1,6 +1,6 @@
 # Lohn- & Abwesenheits-CSV
 
-Interim payroll handoff before a full DATEV bridge.
+Interim payroll handoff before a full DATEV bridge. When a bureau provides an import spec, see [DATEV.md](./DATEV.md).
 
 | Export | API |
 |--------|-----|

@@ -5,6 +5,7 @@
   import { doorStatusLabel } from '../lib/accessLabels';
   import ProductionChecklistCard from './ProductionChecklistCard.svelte';
   import ProductionWizard from './ProductionWizard.svelte';
+  import SetupGuideCard from './SetupGuideCard.svelte';
   import { checklistAllOk, computeProductionChecklist } from '../lib/productionChecklist';
 
   export type OverviewNavigate = {
@@ -382,6 +383,11 @@
         </ul>
       {/if}
     {/if}
+    <SetupGuideCard
+      {apiHealth}
+      {onNavigate}
+      onOpenWizard={() => (wizardOpen = true)}
+    />
     <ProductionChecklistCard {apiHealth} {dashboard} onOpenWizard={() => (wizardOpen = true)} />
     <ProductionWizard
       bind:open={wizardOpen}

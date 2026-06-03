@@ -19,6 +19,9 @@ if (Test-Path $DbPath) {
     Remove-Item -Force $DbPath
 }
 
+Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 1
+
 $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
 $env:TIMESHARDS_DB = $DbPath
 $env:TIMESHARDS_API_HOST = "127.0.0.1"
@@ -51,7 +54,7 @@ $ready = $false
 while ((Get-Date) -lt $deadline) {
     try {
         $h = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2
-        if ($h.status -eq "ok") { $ready = $true; break }
+        if ($h.status -eq "ok" -and $h.demo_seeding_enabled -eq $false) { $ready = $true; break }
     } catch { }
     Start-Sleep -Seconds 1
 }
@@ -109,9 +112,9 @@ if ($prodLogin.user.username -ne "admin") {
 }
 Write-Host "  admin with env password OK"
 
-Stop-Job $apiJob
-Remove-Job $apiJob -Force
-Wait-Job $apiJob -ErrorAction SilentlyContinue | Out-Null
+Stop-Job $apiJob -ErrorAction SilentlyContinue
+Remove-Job $apiJob -Force -ErrorAction SilentlyContinue
+Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 
 Write-Host ""
 Write-Host "Production smoke OK."

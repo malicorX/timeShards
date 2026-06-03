@@ -30,7 +30,7 @@ CI: `.github/workflows/ci.yml` runs `cargo check` and `svelte-check` on push/PR.
 |------|------|
 | `crates/timeshards-api` | REST routes, access eval, ArbZG policy |
 | `crates/timeshards-db` | Migrations, seed |
-| `apps/server` | Admin Tauri app — tabs: `OverviewTab`, `PersonnelTab`, `AbsenceTab`, `AccessTab`, `SystemTab`; Zeit: `WorkCalendarCard`, `ShiftWeekCard`, `TimesheetsCard`, `TimeSettlementCard`; Go-Live: `ProductionChecklistCard`, `ProductionWizard` |
+| `apps/server` | Admin Tauri app — tabs: `OverviewTab`, `PersonnelTab`, …; Übersicht: `SetupGuideCard` (prod, &lt;2 MA), `ProductionChecklistCard`, `ProductionWizard`; Zeit: `WorkCalendarCard`, …, `TimeSettlementCard` |
 | `apps/client` | Employee Tauri app — pillars: `ClientTimePillar`, `ClientApprovalsPillar`, `ClientAbsencePillar`, `ClientAccessPillar`, `ClientAccountPillar`; shell: `ClientAppShell`, `ClientLoginView`, `ClientSettingsView` |
 | `docs/GETTING_STARTED.md` | User guide |
 | `docs/PRODUCTION.md` | Go-live without demo |

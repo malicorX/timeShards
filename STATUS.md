@@ -10,7 +10,7 @@ Germany-first **time tracking + access control** (Tauri + Axum + SQLite):
 - Stempeln, breaks, weekly timesheets with Ist/Soll/Saldo and Tagesdetails
 - Flex/overtime accounts on approve, month close, Lohn-CSV + Abwesenheiten-CSV (+ **Monats-Paket** in UI)
 - Access simulation, anti-passback, occupancy
-- Admin **Go-Live-Assistent**, production checklist, Zeit↔Zutritt KPIs
+- Admin **Go-Live-Assistent**, production checklist, **Ersteinrichtung** hint (prod, &lt;2 MA), Zeit↔Zutritt KPIs
 
 ## Verify locally
 
