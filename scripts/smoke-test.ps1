@@ -11,6 +11,8 @@ param(
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_smoke-api.ps1")
 
+if ($env:GITHUB_STEP_SUMMARY) { Set-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## API smoke steps`n" }
+Trace-SmokeStep "health"
 Write-Host "Health check..."
 $health = Invoke-RestMethod -Uri "$ApiUrl/api/v1/health" -TimeoutSec 5
 Write-Host "  $($health.service) v$($health.version) - $($health.status) (db: $($health.database), demo_seeding=$($health.demo_seeding_enabled), hw=$($health.hardware_adapter))"
@@ -245,6 +247,7 @@ if ($pendingTs.Count -ge 1) {
     throw "Expected pending timesheet to test account posting on approve"
 }
 
+Trace-SmokeStep "payroll-export"
 Write-Host "Payroll CSV export..."
 $payYear = (Get-Date).Year
 $payMonth = (Get-Date).Month
@@ -303,6 +306,9 @@ Write-Host "  shifts_visible_to_demo=$($demoShifts.Count)"
 $demoEvents = Invoke-RestMethod -Uri "$ApiUrl/api/v1/time/events?limit=5" -Headers $demoHeaders
 Write-Host "  time_events=$($demoEvents.Count)"
 
+Trace-SmokeStep "demo-clock"
+Write-Host "Demo rebuild before clock..."
+Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/time/timesheets/rebuild" -Headers $demoHeaders | Out-Null
 Write-Host "Demo clock-in / clock-out..."
 Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/time/clock-in" -Headers $demoHeaders | Out-Null
 $wsIn = Invoke-RestMethod -Uri "$ApiUrl/api/v1/me/work-summary" -Headers $demoHeaders
@@ -382,6 +388,7 @@ try {
 }
 Write-Host "  demo cannot export access log (403)"
 
+Trace-SmokeStep "demo-access-scan"
 Write-Host "Demo badge simulate-scan (in)..."
 function Get-AccessEvents {
     param([hashtable]$AuthHeaders)

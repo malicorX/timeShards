@@ -37,6 +37,8 @@ if ($env:GITHUB_ACTIONS -eq 'true') {
 Remove-Item Env:TIMESHARDS_DISABLE_DEMO -ErrorAction SilentlyContinue
 Remove-Item Env:TIMESHARDS_BLOCK_DEFAULT_PASSWORDS -ErrorAction SilentlyContinue
 
+if ($env:GITHUB_STEP_SUMMARY) { Set-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## External HW smoke`n" }
+Trace-SmokeStep "start-api"
 Write-Host "Starting API (TIMESHARDS_HW_ADAPTER=external, TCP $($env:TIMESHARDS_HW_TCP_ADDR))..."
 $apiJob = Start-Job -ScriptBlock {
     param($Root, $Db, $ApiHost, $Port, $HwAdapter, $TcpAddr)
@@ -69,6 +71,7 @@ $tcpPort = [int]$tcpPortStr
 Wait-TcpPortOpen -HostName $tcpHost -Port $tcpPort -TimeoutSec 30
 Write-Host "  TCP listen ready on $tcpListen"
 
+Trace-SmokeStep "login-simulate"
 $login = Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/auth/login" `
     -Body (@{ username = "admin"; password = "admin" } | ConvertTo-Json) -ContentType "application/json"
 $headers = @{ Authorization = "Bearer $($login.token)" }
@@ -80,6 +83,7 @@ if ($scan.decision -notin @("grant", "allow")) {
 }
 Write-Host "  REST simulate-scan OK ($($scan.decision))"
 
+Trace-SmokeStep "hardware-present"
 Write-Host "Hardware channel present..."
 $evBefore = @(Invoke-RestMethod -Uri "$ApiUrl/api/v1/access/events?limit=5" -Headers $headers).Count
 $body = @{ reader_id = "sim.reader.main.out"; credential_uid = "DEMO-ADMIN-001" } | ConvertTo-Json
@@ -88,7 +92,7 @@ $queued = Invoke-RestMethod -Method Post -Uri "$ApiUrl/api/v1/access/hardware-pr
 if (-not $queued.queued) {
     throw "Expected hardware-present queued=true"
 }
-Start-Sleep -Milliseconds 400
+Start-Sleep -Milliseconds $(if ($env:GITHUB_ACTIONS -eq 'true') { 1500 } else { 400 })
 $ev = Invoke-RestMethod -Uri "$ApiUrl/api/v1/access/events?limit=5" -Headers $headers
 if ($ev.Count -le $evBefore) {
     throw "Expected new access event after hardware-present"
@@ -98,6 +102,7 @@ if ($ev[0].decision -notin @("grant", "allow")) {
 }
 Write-Host "  hardware-present OK ($($ev[0].decision))"
 
+Trace-SmokeStep "tcp-ingest"
 Write-Host "TCP credential ingest..."
 function Get-AccessEvents {
     param([hashtable]$AuthHeaders)
@@ -157,7 +162,7 @@ if (-not $healthFinal.hardware_tcp_listen) {
 Write-Host "  health.hardware_tcp_listen=$($healthFinal.hardware_tcp_listen)"
 
 Write-Host "TCP door state (alarm)..."
-$doors = @((Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/doors" -Headers $headers).Content | ConvertFrom-Json)
+$doors = @(Invoke-RestMethod -Uri "$ApiUrl/api/v1/access/doors" -Headers $headers)
 if ($doors.Count -lt 1) {
     throw "Expected at least one door for door-state smoke"
 }
@@ -178,7 +183,7 @@ $doorRow = $null
 $doorDeadline = (Get-Date).AddSeconds(15)
 while ((Get-Date) -lt $doorDeadline) {
     Start-Sleep -Milliseconds (Get-SmokePollDelayMs)
-    $doorsAfter = @((Invoke-WebRequest -Uri "$ApiUrl/api/v1/access/doors" -Headers $headers).Content | ConvertFrom-Json)
+    $doorsAfter = @(Invoke-RestMethod -Uri "$ApiUrl/api/v1/access/doors" -Headers $headers)
     $doorRow = $doorsAfter | Where-Object { $_.id -eq $doorId } | Select-Object -First 1
     if ($doorRow.status -eq 'alarm') { break }
 }
@@ -204,7 +209,7 @@ $auditDeadline = (Get-Date).AddSeconds(15)
 while ((Get-Date) -lt $auditDeadline) {
     Start-Sleep -Milliseconds (Get-SmokePollDelayMs)
     $auditHw = @(
-        (Invoke-WebRequest -Uri "$ApiUrl/api/v1/admin/audit?actor_type=hardware&action=reader_offline&limit=10" -Headers $headers).Content | ConvertFrom-Json
+        Invoke-RestMethod -Uri "$ApiUrl/api/v1/admin/audit?actor_type=hardware&action=reader_offline&limit=10" -Headers $headers
     )
     if ($auditHw.Count -ge 1) { break }
 }

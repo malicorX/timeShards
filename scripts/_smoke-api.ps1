@@ -5,6 +5,15 @@ if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction Sile
     $PSNativeCommandUseErrorActionPreference = $false
 }
 
+function Trace-SmokeStep {
+    param([string]$Name)
+    Write-Host ""
+    Write-Host "=== $Name ==="
+    if ($env:GITHUB_STEP_SUMMARY) {
+        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $Name"
+    }
+}
+
 function Stop-TimeshardsApiProcess {
     Get-Process -Name "timeshards-api" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 1
