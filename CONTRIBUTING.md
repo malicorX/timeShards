@@ -4,13 +4,8 @@
 
 ```powershell
 npm install
-npm run verify:all    # cargo check + svelte-check + timeshards-db tests + API smoke
-```
-
-Optional:
-
-```powershell
-npm run smoke:production   # TIMESHARDS_DISABLE_DEMO, blocked default passwords
+npm run ship          # full pilot gate (check + DB tests + API smoke + production smoke)
+# or: npm run verify:all && npm run smoke:production
 ```
 
 ## Layout

@@ -8,7 +8,7 @@ $env:Path = "$env:USERPROFILE\.cargo\bin;" + $env:Path
 Set-Location $RepoRoot
 
 Write-Host "cargo check..."
-cargo check
+cargo check --workspace
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ""
